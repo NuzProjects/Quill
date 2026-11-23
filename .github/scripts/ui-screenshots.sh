@@ -197,6 +197,8 @@ if [ "$KIND" = "iPad" ]; then
 	tap "last:Quill"; landscape_shot app-page-landscape
 	tap "Sources"; tap "Sources"
 	tap "LiveContainer"; sleep 4; landscape_shot github-source-landscape
+	tap "Sources"
+	tap "Library"; landscape_shot library-landscape
 fi
 
 xcrun simctl spawn "$UDID" log show --last 10m --predicate "process == \"Quill\" AND messageType == fault" --style compact > "$OUT/faults.log" 2>/dev/null || true
