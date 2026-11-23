@@ -38,7 +38,7 @@
   "sameAs": ["https://github.com/NuzProjects/Quill"],
   "isAccessibleForFree": true,
   "inLanguage": "en",
-  "softwareRequirements": "iOS 16 or later, or iPadOS 16 or later, and a signing certificate (.p12 and .mobileprovision)",
+  "softwareRequirements": "iOS 16 or later, or iPadOS 16 or later, and either a signing certificate (.p12 and .mobileprovision) or a free Apple ID",
   "isBasedOn": { "@type": "SoftwareApplication", "name": "Feather", "url": "https://github.com/claration/feather" },
   "codeRepository": "https://github.com/NuzProjects/Quill",
   "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
@@ -78,7 +78,7 @@
           "name": "Do I need a computer or a jailbreak?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "No. Quill runs on stock iOS and iPadOS 16 or later. All you need is a signing certificate."
+            "text": "No. Quill runs on stock iOS and iPadOS 16 or later. You sign with your own developer certificate (a .p12 and a .mobileprovision) or with a free Apple ID."
           }
         },
         {
@@ -86,7 +86,7 @@
           "name": "How is it different from AltStore or SideStore?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "AltStore and SideStore use a free Apple ID and refresh apps every 7 days. Quill uses a developer certificate, so apps last as long as the certificate does. It still reads AltStore sources."
+            "text": "AltStore and SideStore use a free Apple ID and need a refresh every 7 days. With a developer certificate, Quill-signed apps last as long as the certificate does, usually up to a year. A free Apple ID also works when you have no certificate, with the same 7-day limit. Quill still reads AltStore sources."
           }
         },
         {
@@ -94,7 +94,7 @@
           "name": "How do I install Quill?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Download the IPA and sign it once with your certificate, or add the AltStore source. After that, Quill updates itself from Settings → Updates."
+            "text": "Download the IPA and sign it once with your certificate or free Apple ID, or add the AltStore source. After that, Quill updates itself from Settings → Updates."
           }
         },
         {
@@ -383,7 +383,7 @@ footer a:hover { color: var(--text); }
     <h1>Quill</h1>
     <p class="lead">Sign and install apps on your iPhone and iPad. No computer needed, and it updates itself.</p>
     <div class="actions">
-      <a class="btn btn-primary" data-download href="https://github.com/NuzProjects/Quill/releases/latest/download/Feather.ipa"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" aria-hidden="true" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M12 3.25a.75.75 0 0 1 .75.75v14.19l4.72-4.72a.75.75 0 1 1 1.06 1.06l-6 6a.75.75 0 0 1-1.06 0l-6-6a.75.75 0 1 1 1.06-1.06l4.72 4.72V4a.75.75 0 0 1 .75-.75" clip-rule="evenodd"/></svg>Download</a>
+      <a class="btn btn-primary" data-download href="https://github.com/NuzProjects/Quill/releases/latest/download/Quill.ipa"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" aria-hidden="true" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M12 3.25a.75.75 0 0 1 .75.75v14.19l4.72-4.72a.75.75 0 1 1 1.06 1.06l-6 6a.75.75 0 0 1-1.06 0l-6-6a.75.75 0 1 1 1.06-1.06l4.72 4.72V4a.75.75 0 0 1 .75-.75" clip-rule="evenodd"/></svg>Download</a>
       <a class="btn btn-secondary" href="https://altdirect.app/?url=https://raw.githubusercontent.com/NuzProjects/Quill/refs/heads/main/source.json&amp;old=true">Add to AltStore</a>
     </div>
     <p class="fork">An unofficial fork of <a href="https://github.com/claration/feather">Feather by Samara</a>, not the official app</p>
@@ -436,9 +436,9 @@ footer a:hover { color: var(--text); }
     <h2 class="title reveal">Questions, answered</h2>
     <div class="faq">
       <div class="qa reveal"><button aria-expanded="false">What is Quill?<span class="plus" aria-hidden="true"></span></button><div class="answer"><div><p>Quill is a free, open-source app for iPhone and iPad that signs and installs IPA files directly on the device using your own certificate. It needs no computer and no jailbreak, and it updates itself. It is licensed under GPL-3.0.</p></div></div></div>
-      <div class="qa reveal" style="--d:0.05s"><button aria-expanded="false">Do I need a computer or a jailbreak?<span class="plus" aria-hidden="true"></span></button><div class="answer"><div><p>No. Quill runs on stock iOS and iPadOS 16 or later. All you need is a signing certificate.</p></div></div></div>
-      <div class="qa reveal" style="--d:0.1s"><button aria-expanded="false">How is it different from AltStore or SideStore?<span class="plus" aria-hidden="true"></span></button><div class="answer"><div><p>AltStore and SideStore use a free Apple ID and refresh apps every 7 days. Quill uses a developer certificate, so apps last as long as the certificate does. It still reads AltStore sources.</p></div></div></div>
-      <div class="qa reveal" style="--d:0.15s"><button aria-expanded="false">How do I install Quill?<span class="plus" aria-hidden="true"></span></button><div class="answer"><div><p>Download the IPA and sign it once with your certificate, or add the AltStore source. After that, Quill updates itself from Settings → Updates.</p></div></div></div>
+      <div class="qa reveal" style="--d:0.05s"><button aria-expanded="false">Do I need a computer or a jailbreak?<span class="plus" aria-hidden="true"></span></button><div class="answer"><div><p>No. Quill runs on stock iOS and iPadOS 16 or later. You sign with your own developer certificate (a .p12 and a .mobileprovision) or with a free Apple ID.</p></div></div></div>
+      <div class="qa reveal" style="--d:0.1s"><button aria-expanded="false">How is it different from AltStore or SideStore?<span class="plus" aria-hidden="true"></span></button><div class="answer"><div><p>AltStore and SideStore use a free Apple ID and need a refresh every 7 days. With a developer certificate, Quill-signed apps last as long as the certificate does, usually up to a year. A free Apple ID also works when you have no certificate, with the same 7-day limit. Quill still reads AltStore sources.</p></div></div></div>
+      <div class="qa reveal" style="--d:0.15s"><button aria-expanded="false">How do I install Quill?<span class="plus" aria-hidden="true"></span></button><div class="answer"><div><p>Download the IPA and sign it once with your certificate or free Apple ID, or add the AltStore source. After that, Quill updates itself from Settings → Updates.</p></div></div></div>
       <div class="qa reveal" style="--d:0.2s"><button aria-expanded="false">Was this made with AI?<span class="plus" aria-hidden="true"></span></button><div class="answer"><div><p>Yes. While the original repository was fully hand crafted, AI was partially used in this fork to speed up development.</p></div></div></div>
       <div class="qa reveal" style="--d:0.25s"><button aria-expanded="false">Does Quill collect any data?<span class="plus" aria-hidden="true"></span></button><div class="answer"><div><p>No. There's no tracking or analytics. Crash logs stay on your device unless you choose to share them.</p></div></div></div>
       <div class="qa reveal" style="--d:0.3s"><button aria-expanded="false">Is this the official Quill?<span class="plus" aria-hidden="true"></span></button><div class="answer"><div><p>No. This is an unofficial fork made by NuzFlameV2, building on <a href="https://github.com/claration/feather">Feather by Samara</a>. It isn't made or supported by the original developer, so please report problems with this version here, not to the original project. Both are licensed under GPL-3.0.</p></div></div></div>
@@ -451,7 +451,7 @@ footer a:hover { color: var(--text); }
       <h2>Get Quill</h2>
       <p>Sign it once, and it keeps itself up to date</p>
       <div class="actions">
-        <a class="btn btn-primary" data-download href="https://github.com/NuzProjects/Quill/releases/latest/download/Feather.ipa"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" aria-hidden="true" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M12 3.25a.75.75 0 0 1 .75.75v14.19l4.72-4.72a.75.75 0 1 1 1.06 1.06l-6 6a.75.75 0 0 1-1.06 0l-6-6a.75.75 0 1 1 1.06-1.06l4.72 4.72V4a.75.75 0 0 1 .75-.75" clip-rule="evenodd"/></svg>Download</a>
+        <a class="btn btn-primary" data-download href="https://github.com/NuzProjects/Quill/releases/latest/download/Quill.ipa"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" aria-hidden="true" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M12 3.25a.75.75 0 0 1 .75.75v14.19l4.72-4.72a.75.75 0 1 1 1.06 1.06l-6 6a.75.75 0 0 1-1.06 0l-6-6a.75.75 0 1 1 1.06-1.06l4.72 4.72V4a.75.75 0 0 1 .75-.75" clip-rule="evenodd"/></svg>Download</a>
         <a class="btn btn-secondary" href="https://github.com/NuzProjects/Quill">View on GitHub</a>
       </div>
     </div>
