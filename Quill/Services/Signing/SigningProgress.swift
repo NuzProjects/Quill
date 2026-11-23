@@ -30,6 +30,7 @@ final class SigningProgress: ObservableObject {
 		let isUpdate: Bool
 		var megabytes: Double = 0
 		var failureReason: String?
+		var failureDetail: String?
 		let started = Date()
 
 		func secondsLeft(at date: Date = Date()) -> Int? {
@@ -111,6 +112,7 @@ final class SigningProgress: ObservableObject {
 		guard !cancelled.contains(id) else { return }
 		if !success, let index = jobs.firstIndex(where: { $0.id == id }) {
 			jobs[index].failureReason = reason.map(Self.shortReason)
+			jobs[index].failureDetail = reason
 		}
 		if success, let job = jobs.first(where: { $0.id == id }), job.megabytes >= 1 {
 			let rate = Date().timeIntervalSince(job.started) / job.megabytes
@@ -147,7 +149,7 @@ final class SigningProgress: ObservableObject {
 struct SigningProgressPanel: View {
 	@ObservedObject private var progress = SigningProgress.shared
 	@State private var confirming: SigningProgress.Job?
-	@State private var showingLogs = false
+	@State private var failure: SigningFailure?
 	var body: some View {
 		ZStack {
 			if let job = progress.visibleJobs.first {
@@ -155,7 +157,9 @@ struct SigningProgressPanel: View {
 					.transition(.progressPanel)
 					.onTapGesture {
 						if job.stage.isActive { confirming = job }
-						else if job.stage == .failed { showingLogs = true }
+						else if job.stage == .failed {
+							failure = SigningFailure(appName: job.name, icon: job.icon, error: job.failureDetail ?? job.failureReason ?? job.stage.title)
+						}
 					}
 			}
 		}
@@ -164,15 +168,8 @@ struct SigningProgressPanel: View {
 			Button("Cancel Signing", role: .destructive) { if let job = confirming { progress.cancel(job.id) } }
 			Button("Keep Signing", role: .cancel) {}
 		}
-		.sheet(isPresented: $showingLogs) {
-			NavigationStack {
-				DeveloperLogsView()
-					.toolbar {
-						ToolbarItem(placement: .confirmationAction) {
-							Button(.localized("Done")) { showingLogs = false }
-						}
-					}
-			}
+		.sheet(item: $failure) { failure in
+			SigningFailureView(failure: failure)
 		}
 	}
 	private var _isConfirming: Binding<Bool> {
@@ -192,7 +189,7 @@ struct SigningProgressPanel: View {
 						Text(job.name).font(.subheadline.weight(.semibold)).lineLimit(1)
 						if job.stage == .failed, let reason = job.failureReason {
 							Text(reason).font(.caption).foregroundStyle(.red).lineLimit(2)
-							Text(.localized("Tap to view the log")).font(.caption2).foregroundStyle(Color(uiColor: .tertiaryLabel))
+							Text(.localized("Tap for details")).font(.caption2).foregroundStyle(Color(uiColor: .tertiaryLabel))
 						} else {
 							Text(job.stage.title).font(.caption).foregroundStyle(Color(uiColor: .secondaryLabel))
 						}

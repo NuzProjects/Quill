@@ -295,6 +295,12 @@ struct LibraryView: View {
 			.onReceive(NotificationCenter.default.publisher(for: Notification.Name("Quill.signApp"))) { notification in
 				_selectedSigningAppPresenting = notification.object as? AnyApp
 			}
+			.onReceive(NotificationRouter.shared.$signApp) { app in
+				guard let app else { return }
+				_selectedSigningAppPresenting = app
+				// Cleared on the next turn: @Published emits before it stores, so clearing here would be overwritten.
+				DispatchQueue.main.async { NotificationRouter.shared.signApp = nil }
+			}
 			.onChange(of: _editMode) { mode in
 				if mode == .inactive {
 					_selectedAppUUIDs.removeAll()

@@ -10,6 +10,8 @@ final class NotificationRouter: ObservableObject {
 	@Published var certificate: CertificatePair?
 	/// Set when a notification wants the Library tab opened.
 	@Published var openLibrary = false
+	/// An app a Shortcut asked to sign; the Library opens its signing screen and clears this.
+	@Published var signApp: AnyApp?
 
 	private init() {}
 

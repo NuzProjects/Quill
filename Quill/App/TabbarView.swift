@@ -76,6 +76,11 @@ struct TabbarView: View {
 				selected = .library
 			}
 		}
+		.onChange(of: router.signApp?.id) { id in
+			guard id != nil, navigator.tabs.contains(.library), selected != .library else { return }
+			TabTransition.crossfade()
+			selected = .library
+		}
 		.sheet(item: $router.certificate) { certificate in
 			NavigationStack {
 				CertificateOverviewDetailView(cert: certificate)
