@@ -12,6 +12,9 @@ enum AppCompatibility {
 		case appIDLimitReached(nextSlot: Date)
 		case appIDLimitClose(used: Int)
 		case lowStorage(neededMB: Int, freeMB: Int)
+		case entitlementsDropped([String])
+		case entitlementsNotAllowed([String])
+		case tweak(file: String, message: String)
 
 		var id: String { message }
 
@@ -23,6 +26,12 @@ enum AppCompatibility {
 			}
 		}
 
+		/// Advisory issues are shown in the pre-sign check but don't ask "Sign Anyway?".
+		var isAdvisory: Bool {
+			if case .entitlementsDropped = self { return true }
+			return false
+		}
+
 		var icon: String {
 			switch self {
 			case .encrypted: "lock.fill"
@@ -30,6 +39,8 @@ enum AppCompatibility {
 			case .certificateExpired, .certificateRevoked, .certificateExpiresSoon: "checkmark.seal"
 			case .appIDLimitReached, .appIDLimitClose: "number"
 			case .lowStorage: "internaldrive"
+			case .entitlementsDropped, .entitlementsNotAllowed: "key"
+			case .tweak: "puzzlepiece.extension"
 			}
 		}
 
@@ -53,6 +64,12 @@ enum AppCompatibility {
 				return String(format: .localized("This Apple ID has used %ld of %ld new App IDs for this week. Signing this app uses one more."), used, AppIDUsage.weeklyLimit)
 			case .lowStorage(let needed, let free):
 				return String(format: .localized("Signing needs about %ld MB of free space, but only %ld MB is free. Free up some space first."), needed, free)
+			case .entitlementsDropped(let names):
+				return String(format: .localized("This certificate can't give the app %@, so those features won't work after signing."), ListFormatter.localizedString(byJoining: names))
+			case .entitlementsNotAllowed(let names):
+				return String(format: .localized("Your entitlements file asks for %@, which this certificate doesn't allow, so iOS may refuse to install the app."), ListFormatter.localizedString(byJoining: names))
+			case .tweak(let file, let message):
+				return "\(file): \(message)"
 			}
 		}
 	}
@@ -184,5 +201,21 @@ enum AppCompatibility {
 
 	private static func _be64(_ bytes: [UInt8], _ i: Int) -> UInt64 {
 		UInt64(_be32(bytes, i)) << 32 | UInt64(_be32(bytes, i + 4))
+	}
+}
+
+extension AppCompatibility {
+	/// Warnings from the entitlement report.
+	static func issues(for report: EntitlementsReport?) -> [Issue] {
+		guard let report else { return [] }
+		var result: [Issue] = []
+		if !report.notAllowed.isEmpty { result.append(.entitlementsNotAllowed(EntitlementsReport.names(report.notAllowed))) }
+		if !report.dropped.isEmpty { result.append(.entitlementsDropped(EntitlementsReport.names(report.dropped))) }
+		return result
+	}
+
+	/// Warnings from the tweak checker, in the order the tweaks were added.
+	static func issues(for findings: [URL: [TweakInspector.Finding]], order: [URL]) -> [Issue] {
+		order.flatMap { findings[$0] ?? [] }.map { .tweak(file: $0.file, message: $0.message) }
 	}
 }

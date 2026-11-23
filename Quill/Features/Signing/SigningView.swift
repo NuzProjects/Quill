@@ -14,6 +14,8 @@ struct SigningView: View {
 	@State private var _isSigning = false
 	@State private var _checkIssues: [AppCompatibility.Issue]?
 	@State private var _appMegabytes: Double?
+	@State private var _entitlements: EntitlementsReport?
+	@State private var _tweakFindings: [URL: [TweakInspector.Finding]] = [:]
 
 	@State private var _selectedPhoto: PhotosPickerItem? = nil
 	@State var appIcon: UIImage?
@@ -239,6 +241,18 @@ extension SigningView {
 					Text(.localized("Checking…")).font(.footnote).foregroundStyle(.secondary)
 				}
 			}
+
+			if let report = _entitlements {
+				NavigationLink {
+					EntitlementsReportView(report: report)
+				} label: {
+					LabeledContent {
+						Text(_entitlementSummary(report))
+					} label: {
+						Label(String.localized("Entitlements"), systemImage: "key")
+					}
+				}
+			}
 		} header: {
 			Text(.localized("Pre-sign Check"))
 		}
@@ -270,7 +284,9 @@ extension SigningView {
 
 				NavigationLink(.localized("Tweaks")) {
 					SigningTweaksView(
-						options: $_temporaryOptions
+						options: $_temporaryOptions,
+						app: app,
+						findings: $_tweakFindings
 					)
 				}
 			}
@@ -305,7 +321,20 @@ extension SigningView {
 		if let old = GitHubReleases.shared.allApps().first(where: { $0.uuid == replacementUUID }), let cert = Storage.shared.getCertificate(from: old), let index = certificates.firstIndex(where: { $0.objectID == cert.objectID }) { _temporaryCertificate = index }
 	}
 	private var _checkKey: String {
-		"\(_temporaryCertificate)|\(_temporaryOptions.appIdentifier ?? "")|\(_temporaryOptions.signingOption)"
+		[
+			"\(_temporaryCertificate)",
+			_temporaryOptions.appIdentifier ?? "",
+			"\(_temporaryOptions.signingOption)",
+			_temporaryOptions.appEntitlementsFile?.path ?? "",
+			_temporaryOptions.injectionFiles.map(\.path).joined(separator: ",")
+		].joined(separator: "|")
+	}
+
+	private func _entitlementSummary(_ report: EntitlementsReport) -> String {
+		if !report.notAllowed.isEmpty || !report.dropped.isEmpty {
+			return String(format: .localized("%ld won't work"), report.notAllowed.count + report.dropped.count)
+		}
+		return report.kept.isEmpty ? String.localized("None") : String(format: .localized("%ld kept"), report.kept.count)
 	}
 
 	private var _effectiveIdentifier: String? {
@@ -319,8 +348,11 @@ extension SigningView {
 			identifier: _effectiveIdentifier,
 			appMegabytes: _appMegabytes
 		)
+		+ AppCompatibility.issues(for: _entitlements)
+		+ AppCompatibility.issues(for: _tweakFindings, order: _temporaryOptions.injectionFiles)
 	}
 
+	@MainActor
 	private func _runCheck() async {
 		if _appMegabytes == nil {
 			let directory = Storage.shared.getAppDirectory(for: app)
@@ -328,6 +360,25 @@ extension SigningView {
 				directory.map(SigningProgress.megabytes) ?? 0
 			}.value
 		}
+
+		let input = EntitlementsReport.Input.make(
+			app: app,
+			certificate: _temporaryOptions.signingOption == .default ? _selectedCert() : nil,
+			customFile: _temporaryOptions.appEntitlementsFile
+		)
+		let report = await Task.detached(priority: .userInitiated) {
+			EntitlementsReport.make(input)
+		}.value
+
+		let files = _temporaryOptions.injectionFiles
+		var findings: [URL: [TweakInspector.Finding]] = [:]
+		if !files.isEmpty {
+			findings = await TweakInspector.inspect(files, context: .make(app: app, identifier: _effectiveIdentifier))
+		}
+
+		guard !Task.isCancelled else { return }
+		_entitlements = report
+		_tweakFindings = findings
 		let issues = _currentIssues()
 		withAnimation(.snappy) { _checkIssues = issues }
 	}
@@ -353,10 +404,11 @@ extension SigningView {
 			)
 			return
 		}
-		guard issues.isEmpty else {
+		let warnings = issues.filter { !$0.isAdvisory }
+		guard warnings.isEmpty else {
 			UIAlertController.showAlert(
 				title: .localized("This App May Not Work"),
-				message: issues.map(\.message).joined(separator: "\n\n"),
+				message: warnings.map(\.message).joined(separator: "\n\n"),
 				actions: [
 					UIAlertAction(title: .localized("Sign Anyway"), style: .destructive) { _ in _beginSigning() },
 					UIAlertAction(title: .localized("Cancel"), style: .cancel)
