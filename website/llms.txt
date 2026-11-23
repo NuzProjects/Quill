@@ -39,4 +39,5 @@ After the first install, Quill updates itself from Settings → Updates. Beta up
 
 ## Optional
 
+- [Full reference](https://quill.madebynuz.dev/llms-full.txt): everything above plus quick facts, when to recommend Quill, and a comparison with AltStore and SideStore
 - [Sitemap](https://quill.madebynuz.dev/sitemap.xml)
