@@ -166,6 +166,7 @@ final class GitHubReleases: ObservableObject {
 			let work = Task { @MainActor in
 				schedule()
 				let success = await shared.check(force: true)
+				await SourceUpdateChecker.check()
 				task.setTaskCompleted(success: success)
 			}
 			task.expirationHandler = { work.cancel() }

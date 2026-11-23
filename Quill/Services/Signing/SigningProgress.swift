@@ -29,6 +29,7 @@ final class SigningProgress: ObservableObject {
 		var stage: Stage
 		let isUpdate: Bool
 		var megabytes: Double = 0
+		var failureReason: String?
 		let started = Date()
 
 		func secondsLeft(at date: Date = Date()) -> Int? {
@@ -80,14 +81,14 @@ final class SigningProgress: ObservableObject {
 		#endif
 	}
 
-	private func notifyIfInBackground(name: String, success: Bool) {
+	private func notifyIfInBackground(name: String, success: Bool, reason: String? = nil) {
 		guard UIApplication.shared.applicationState != .active else { return }
 		let center = UNUserNotificationCenter.current()
 		center.getNotificationSettings { settings in
 			guard settings.authorizationStatus == .authorized || settings.authorizationStatus == .provisional else { return }
 			let content = UNMutableNotificationContent()
 			content.title = success ? String.localized("Signing complete") : String.localized("Signing failed")
-			content.body = name
+			content.body = reason.map { "\(name): \($0)" } ?? name
 			content.sound = .default
 			center.add(UNNotificationRequest(identifier: "Quill.signing.\(UUID().uuidString)", content: content, trigger: nil))
 		}
@@ -106,8 +107,11 @@ final class SigningProgress: ObservableObject {
 		remove(id, after: 1_200_000_000)
 	}
 	func isCancelled(_ id: UUID) -> Bool { cancelled.contains(id) }
-	func finish(_ id: UUID, success: Bool) {
+	func finish(_ id: UUID, success: Bool, reason: String? = nil) {
 		guard !cancelled.contains(id) else { return }
+		if !success, let index = jobs.firstIndex(where: { $0.id == id }) {
+			jobs[index].failureReason = reason.map(Self.shortReason)
+		}
 		if success, let job = jobs.first(where: { $0.id == id }), job.megabytes >= 1 {
 			let rate = Date().timeIntervalSince(job.started) / job.megabytes
 			let blended = Self.secondsPerMegabyte.map { $0 * 0.6 + rate * 0.4 } ?? rate
@@ -118,8 +122,14 @@ final class SigningProgress: ObservableObject {
 		UINotificationFeedbackGenerator().notificationOccurred(success ? .success : .error)
 		endLease(id)
 		letGoOfBackground()
-		if !(jobs.first(where: { $0.id == id })?.isUpdate ?? false) { notifyIfInBackground(name: name, success: success) }
-		remove(id, after: success ? 1_500_000_000 : 4_000_000_000)
+		if !(jobs.first(where: { $0.id == id })?.isUpdate ?? false) { notifyIfInBackground(name: name, success: success, reason: success ? nil : reason.map(Self.shortReason)) }
+		remove(id, after: success ? 1_500_000_000 : 8_000_000_000)
+	}
+	/// Keeps the first sentence of an error so it fits on the card.
+	nonisolated static func shortReason(_ message: String) -> String {
+		let trimmed = message.trimmingCharacters(in: .whitespacesAndNewlines)
+		let firstLine = trimmed.components(separatedBy: .newlines).first ?? trimmed
+		return firstLine.count > 120 ? String(firstLine.prefix(117)) + "…" : firstLine
 	}
 	private func remove(_ id: UUID, after delay: UInt64) {
 		Task {
@@ -137,18 +147,32 @@ final class SigningProgress: ObservableObject {
 struct SigningProgressPanel: View {
 	@ObservedObject private var progress = SigningProgress.shared
 	@State private var confirming: SigningProgress.Job?
+	@State private var showingLogs = false
 	var body: some View {
 		ZStack {
 			if let job = progress.visibleJobs.first {
 				card(job)
 					.transition(.progressPanel)
-					.onTapGesture { if job.stage.isActive { confirming = job } }
+					.onTapGesture {
+						if job.stage.isActive { confirming = job }
+						else if job.stage == .failed { showingLogs = true }
+					}
 			}
 		}
 		.animation(.smooth(duration: 0.4), value: progress.visibleJobs.first?.id)
 		.confirmationDialog("Cancel signing \(confirming?.name ?? "")?", isPresented: _isConfirming, titleVisibility: .visible) {
 			Button("Cancel Signing", role: .destructive) { if let job = confirming { progress.cancel(job.id) } }
 			Button("Keep Signing", role: .cancel) {}
+		}
+		.sheet(isPresented: $showingLogs) {
+			NavigationStack {
+				DeveloperLogsView()
+					.toolbar {
+						ToolbarItem(placement: .confirmationAction) {
+							Button(.localized("Done")) { showingLogs = false }
+						}
+					}
+			}
 		}
 	}
 	private var _isConfirming: Binding<Bool> {
@@ -166,7 +190,12 @@ struct SigningProgressPanel: View {
 					ProgressPanelIcon(image: job.icon)
 					VStack(alignment: .leading, spacing: 2) {
 						Text(job.name).font(.subheadline.weight(.semibold)).lineLimit(1)
-						Text(job.stage.title).font(.caption).foregroundStyle(Color(uiColor: .secondaryLabel))
+						if job.stage == .failed, let reason = job.failureReason {
+							Text(reason).font(.caption).foregroundStyle(.red).lineLimit(2)
+							Text(.localized("Tap to view the log")).font(.caption2).foregroundStyle(Color(uiColor: .tertiaryLabel))
+						} else {
+							Text(job.stage.title).font(.caption).foregroundStyle(Color(uiColor: .secondaryLabel))
+						}
 					}
 					Spacer(minLength: 8)
 					TimelineView(.periodic(from: .now, by: 1)) { context in

@@ -84,7 +84,7 @@ enum FR {
 				try await handler.modify()
 				try? await handler.clean()
 				await MainActor.run {
-					guard let signed = try? Storage.shared.context.fetch(Signed.fetchRequest()).first(where: { $0.uuid == handler.resultUUID }) else { SigningProgress.shared.finish(job, success: false); completion(ReleaseError.invalidApp); return }
+					guard let signed = try? Storage.shared.context.fetch(Signed.fetchRequest()).first(where: { $0.uuid == handler.resultUUID }) else { SigningProgress.shared.finish(job, success: false, reason: ReleaseError.invalidApp.localizedDescription); completion(ReleaseError.invalidApp); return }
 					if SigningProgress.shared.isCancelled(job) {
 						Storage.shared.deleteApp(for: signed)
 						completion(CancellationError())
@@ -102,7 +102,7 @@ enum FR {
 					DevLog.shared.error(error, while: "Signing \(app.name ?? "app") (\(app.identifier ?? "?"))", category: "Signing")
 				}
 				await MainActor.run {
-					SigningProgress.shared.finish(job, success: false)
+					SigningProgress.shared.finish(job, success: false, reason: error.localizedDescription)
 					completion(error)
 				}
 			}
