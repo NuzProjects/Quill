@@ -4,7 +4,7 @@
 
 Quill uses a developer certificate (a .p12 plus a .mobileprovision), so signed apps last as long as the certificate does. This differs from AltStore and SideStore, which use a free Apple ID and refresh apps every 7 days. Quill still reads AltStore sources. It runs on stock iOS and iPadOS 16 or later.
 
-Quill is not the original Feather app and is not made or supported by its developer. Report problems with this version to the Quill repository, not to the original project. The site's FAQ says Quill collects no data: no tracking or analytics, and crash logs stay on the device unless the user chooses to share them.
+Quill is not the original Feather app and is not made or supported by its developer. Report problems with this version to the Quill repository, not to the original project. The original repository was fully hand crafted; AI was partially used in this fork to speed up development. The site's FAQ says Quill collects no data: no tracking or analytics, and crash logs stay on the device unless the user chooses to share them.
 
 ## Get Quill
 
