@@ -21,6 +21,7 @@ struct LibraryCellView: View {
 	}
 
 	var app: AppInfoPresentable
+	var isGrid: Bool = false
 	@Binding var selectedInfoAppPresenting: AnyApp?
 	@Binding var selectedSigningAppPresenting: AnyApp?
 	@Binding var selectedInstallAppPresenting: AnyApp?
@@ -44,42 +45,50 @@ struct LibraryCellView: View {
 		let isRegular = horizontalSizeClass != .compact
 		let isEditing = editMode?.wrappedValue == .active
 
-		HStack(spacing: 18) {
-			if isEditing {
-				Button {
-					_toggleSelection()
-				} label: {
-					Image(systemName: _isSelected ? "checkmark.circle.fill" : "circle")
-						.foregroundColor(_isSelected ? .accentColor : .secondary)
-						.font(.title2)
+		Group {
+			if isGrid {
+				_gridTile(isEditing: isEditing)
+			} else {
+				HStack(spacing: 18) {
+					if isEditing {
+						Button {
+							_toggleSelection()
+						} label: {
+							Image(systemName: _isSelected ? "checkmark.circle.fill" : "circle")
+								.foregroundColor(_isSelected ? .accentColor : .secondary)
+								.font(.title2)
+						}
+						.buttonStyle(.borderless)
+					}
+
+					_appIcon(for: app)
+
+					NBTitleWithSubtitleView(
+						title: app.name ?? .localized("Unknown"),
+						subtitle: _desc,
+						linelimit: 0
+					)
+
+					if github.busy.contains(app.uuid ?? "") { ProgressView().accessibilityLabel("Updating app") }
+					if !isEditing {
+						_buttonActions(for: app)
+					}
 				}
-				.buttonStyle(.borderless)
-			}
-
-			_appIcon(for: app)
-
-			NBTitleWithSubtitleView(
-				title: app.name ?? .localized("Unknown"),
-				subtitle: _desc,
-				linelimit: 0
-			)
-
-			if github.busy.contains(app.uuid ?? "") { ProgressView().accessibilityLabel("Updating app") }
-			if !isEditing {
-				_buttonActions(for: app)
+				.padding(isRegular ? 12 : 0)
+				.background(
+					isRegular
+						? RoundedRectangle(cornerRadius: 18, style: .continuous)
+						.fill(_isSelected && isEditing ? Color.accentColor.opacity(0.1) : Color(.quaternarySystemFill))
+						: nil
+				)
 			}
 		}
-		.padding(isRegular ? 12 : 0)
-		.background(
-			isRegular
-				? RoundedRectangle(cornerRadius: 18, style: .continuous)
-				.fill(_isSelected && isEditing ? Color.accentColor.opacity(0.1) : Color(.quaternarySystemFill))
-				: nil
-		)
 		.contentShape(Rectangle())
 		.onTapGesture {
 			if isEditing {
 				_toggleSelection()
+			} else if isGrid {
+				selectedInfoAppPresenting = AnyApp(base: app)
 			}
 		}
 		.swipeActions(edge: .trailing, allowsFullSwipe: true) {
@@ -173,8 +182,48 @@ struct LibraryCellView: View {
 }
 
 extension LibraryCellView {
-	private func _appIcon(for app: AppInfoPresentable) -> some View {
-		FRAppIconView(app: app, size: 57)
+	private func _gridTile(isEditing: Bool) -> some View {
+		VStack(spacing: 6) {
+			_appIcon(for: app, size: 72)
+				.overlay(alignment: .bottomTrailing) {
+					if isEditing {
+						Image(systemName: _isSelected ? "checkmark.circle.fill" : "circle")
+							.font(.title3)
+							.symbolRenderingMode(.palette)
+							.foregroundStyle(_isSelected ? Color.white : Color.secondary, _isSelected ? Color.accentColor : Color(.systemBackground))
+							.background(Circle().fill(Color(.systemBackground)).padding(2))
+							.offset(x: 4, y: 4)
+					}
+				}
+				.overlay {
+					if github.busy.contains(app.uuid ?? "") {
+						ProgressView()
+							.padding(8)
+							.background(.ultraThinMaterial, in: Circle())
+							.accessibilityLabel("Updating app")
+					}
+				}
+				.opacity(isEditing && !_isSelected ? 0.6 : 1)
+
+			Text(app.name ?? .localized("Unknown"))
+				.font(.footnote.weight(.medium))
+				.lineLimit(2)
+				.multilineTextAlignment(.center)
+				.frame(maxWidth: .infinity)
+
+			if !isEditing {
+				_buttonActions(for: app)
+					.controlSize(.small)
+			}
+		}
+		.frame(maxWidth: .infinity, alignment: .top)
+		.accessibilityElement(children: .contain)
+		.accessibilityLabel(app.name ?? .localized("Unknown"))
+		.accessibilityAddTraits(isEditing && _isSelected ? .isSelected : [])
+	}
+
+	private func _appIcon(for app: AppInfoPresentable, size: CGFloat = 57) -> some View {
+		FRAppIconView(app: app, size: size)
 			.overlay(alignment: .topTrailing) {
 				if updateManager.update(for: app) != nil || github.updates[app.uuid ?? ""] != nil {
 					Image(systemName: "arrow.down.circle.fill")
@@ -333,6 +382,12 @@ extension LibraryCellView {
 			return InstallProblem(
 				title: .localized("Certificate Expired"),
 				message: .localized("This app was signed with a certificate that has expired, so iOS won't open it. Re-sign it with a valid certificate first.")
+			)
+		}
+		if AppCompatibility.deviceIsListed(in: certificate) == false {
+			return InstallProblem(
+				title: .localized("This Device Isn't in the Profile"),
+				message: .localized("The certificate this app was signed with doesn't list this device's UDID, so iOS will refuse to install it. Re-sign it with a certificate that includes this device.")
 			)
 		}
 		return nil

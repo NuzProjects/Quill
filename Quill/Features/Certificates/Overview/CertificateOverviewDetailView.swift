@@ -10,6 +10,8 @@ struct CertificateOverviewDetailView: View {
 	@ScaledMetric private var _capabilitySymbol: CGFloat = 14
 	@State private var _isCheckingRevocation = false
 	@State private var _revocationAlert: (title: String, message: String)?
+	@State private var _isFindingUDID = false
+	@State private var _udidRefresh = 0
 
 	private var _index: Int? {
 		Storage.shared.getAllCertificates().firstIndex { $0.uuid == cert.uuid }
@@ -30,6 +32,13 @@ struct CertificateOverviewDetailView: View {
 		}
 		.onAppear {
 			_data = Storage.shared.getProvisionFileDecoded(for: cert)
+		}
+		.sheet(isPresented: $_isFindingUDID) {
+			SafariRepresentableView(url: AppleIDAccount.udidProfileURL)
+		}
+		.onReceive(NotificationCenter.default.publisher(for: AppleIDAccount.detectedUDIDNotification)) { _ in
+			_isFindingUDID = false
+			_udidRefresh += 1
 		}
 		.alert(
 			_revocationAlert?.title ?? "",
@@ -147,12 +156,43 @@ extension CertificateOverviewDetailView {
 				} label: {
 					Label(data.deviceSummary, systemImage: "iphone")
 				}
+				_thisDeviceRow(data)
 			} else {
 				Label("No devices listed", systemImage: "iphone.slash")
 					.foregroundStyle(Color(uiColor: .secondaryLabel))
 			}
 		} footer: {
 			Text("Apps signed with this certificate only open on devices listed in its provisioning profile.")
+		}
+	}
+
+	@ViewBuilder
+	private func _thisDeviceRow(_ data: Certificate) -> some View {
+		let _ = _udidRefresh
+		switch AppCompatibility.deviceIsListed(in: data) {
+		case .some(true):
+			Label(.localized("This device is listed"), systemImage: "checkmark.circle.fill")
+				.foregroundStyle(.green)
+		case .some(false):
+			VStack(alignment: .leading, spacing: 4) {
+				Label(.localized("This device isn't listed"), systemImage: "exclamationmark.triangle.fill")
+					.foregroundStyle(.orange)
+				Text(.localized("Apps signed with this certificate won't install here until this device's UDID is added to the profile."))
+					.font(.footnote)
+					.foregroundStyle(Color(uiColor: .secondaryLabel))
+				if let udid = AppleIDAccount.knownUDID?.value {
+					Text(udid)
+						.font(.system(.footnote, design: .monospaced))
+						.foregroundStyle(Color(uiColor: .secondaryLabel))
+						.copyableText(udid)
+				}
+			}
+		case .none:
+			Button {
+				_isFindingUDID = true
+			} label: {
+				Label(.localized("Check This Device"), systemImage: "wand.and.stars")
+			}
 		}
 	}
 

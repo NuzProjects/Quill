@@ -48974,6 +48974,171 @@
           }
         }
       }
+    },
+    "This device isn't in %@'s provisioning profile, so iOS will refuse to install the app. Add this device's UDID to the profile, or pick another certificate." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This device isn't in %@'s provisioning profile, so iOS will refuse to install the app. Add this device's UDID to the profile, or pick another certificate."
+          }
+        }
+      }
+    },
+    "This device is listed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This device is listed"
+          }
+        }
+      }
+    },
+    "This device isn't listed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This device isn't listed"
+          }
+        }
+      }
+    },
+    "Apps signed with this certificate won't install here until this device's UDID is added to the profile." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apps signed with this certificate won't install here until this device's UDID is added to the profile."
+          }
+        }
+      }
+    },
+    "Check This Device" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check This Device"
+          }
+        }
+      }
+    },
+    "This Device Isn't in the Profile" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This Device Isn't in the Profile"
+          }
+        }
+      }
+    },
+    "The certificate this app was signed with doesn't list this device's UDID, so iOS will refuse to install it. Re-sign it with a certificate that includes this device." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The certificate this app was signed with doesn't list this device's UDID, so iOS will refuse to install it. Re-sign it with a certificate that includes this device."
+          }
+        }
+      }
+    },
+    "View As" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "View As"
+          }
+        }
+      }
+    },
+    "Sort and View" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sort and View"
+          }
+        }
+      }
+    },
+    "List" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "List"
+          }
+        }
+      }
+    },
+    "Grid" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grid"
+          }
+        }
+      }
+    },
+    "Import This App?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Import This App?"
+          }
+        }
+      }
+    },
+    "You copied a link to %@ from %@. Download it to your Library?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You copied a link to %@ from %@. Download it to your Library?"
+          }
+        }
+      }
+    },
+    "Offer Copied IPA Links" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Offer Copied IPA Links"
+          }
+        }
+      }
+    },
+    "When you open Quill with an IPA link copied, it offers to import it." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When you open Quill with an IPA link copied, it offers to import it."
+          }
+        }
+      }
     }
   },
   "version" : "1.0"
