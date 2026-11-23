@@ -9,6 +9,3 @@ https://:version.quill-7xe.pages.dev/*
 
 /llm.txt
   Content-Type: text/plain; charset=utf-8
-
-/llms-full.txt
-  Content-Type: text/plain; charset=utf-8

@@ -23,6 +23,5 @@ Allow: /
 
 Sitemap: https://quill.madebynuz.dev/sitemap.xml
 
-# Plain-text summaries for AI crawlers and assistants
-# Short:  https://quill.madebynuz.dev/llms.txt
-# Full:   https://quill.madebynuz.dev/llms-full.txt
+# Plain-text summary for AI crawlers and assistants
+# https://quill.madebynuz.dev/llms.txt
