@@ -26,8 +26,9 @@ enum CertificateExpiry {
 				guard let fire = Calendar.current.date(byAdding: .day, value: -days, to: expiration), fire > Date() else { continue }
 				let content = UNMutableNotificationContent()
 				content.title = "Certificate Expiring"
-				content.body = "\(name) expires \(days == 1 ? "tomorrow" : "in \(days) days"). Add a new certificate to keep signing apps."
+				content.body = "\(name) expires \(days == 1 ? "tomorrow" : "in \(days) days"). Tap to see the apps that will need re-signing."
 				content.sound = .default
+				if let uuid = certificate.uuid { content.userInfo = ["certificateUUID": uuid] }
 				let trigger = UNCalendarNotificationTrigger(dateMatching: Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: fire), repeats: false)
 				center.add(UNNotificationRequest(identifier: prefix + "\(days)", content: content, trigger: trigger))
 			}

@@ -24,11 +24,44 @@ struct LibraryView: View {
 
 	@Namespace private var _namespace
 
-	private func filteredAndSortedApps<T>(from apps: FetchedResults<T>) -> [T] where T: NSManagedObject {
-		apps.filter {
+	@AppStorage("Quill.librarySort") private var _sort: Sort = .dateSigned
+
+	private func filteredAndSortedApps<T>(from apps: FetchedResults<T>) -> [T] where T: NSManagedObject & AppInfoPresentable {
+		let filtered = apps.filter {
 			_searchText.isEmpty ||
-				(($0.value(forKey: "name") as? String)?.localizedCaseInsensitiveContains(_searchText) ?? false)
+				($0.name?.localizedCaseInsensitiveContains(_searchText) ?? false)
 		}
+		switch _sort {
+		case .dateSigned:
+			return filtered
+		case .name:
+			return filtered.sorted { ($0.name ?? "").localizedStandardCompare($1.name ?? "") == .orderedAscending }
+		case .size:
+			return filtered.sorted { Self._size(of: $0) > Self._size(of: $1) }
+		case .expiresSoonest:
+			return filtered.sorted {
+				switch (Self._expiration(of: $0), Self._expiration(of: $1)) {
+				case let (a?, b?): return a < b
+				case (_?, nil): return true
+				default: return false
+				}
+			}
+		}
+	}
+
+	private static var _sizeCache: [String: Double] = [:]
+
+	private static func _size(of app: AppInfoPresentable) -> Double {
+		guard let uuid = app.uuid else { return 0 }
+		if let cached = _sizeCache[uuid] { return cached }
+		guard let folder = Storage.shared.getUuidDirectory(for: app) else { return 0 }
+		let size = SigningProgress.megabytes(of: folder)
+		_sizeCache[uuid] = size
+		return size
+	}
+
+	private static func _expiration(of app: AppInfoPresentable) -> Date? {
+		(app as? Signed)?.certificate?.expiration
 	}
 
 	private var _filteredSignedApps: [Signed] {
@@ -166,6 +199,24 @@ struct LibraryView: View {
 				}
 
 				ToolbarItem(placement: .topBarTrailing) {
+					Menu {
+						Picker(selection: $_sort.animation(.snappy)) {
+							ForEach(Sort.allCases, id: \.self) { sort in
+								Label(sort.displayName, systemImage: sort.icon).tag(sort)
+							}
+						} label: {
+							Text(.localized("Sort By"))
+						}
+					} label: {
+						Image(systemName: "arrow.up.arrow.down")
+					}
+					.accessibilityLabel(String.localized("Sort By"))
+					.opacity(_editMode.isEditing ? 0 : 1)
+					.allowsHitTesting(!_editMode.isEditing)
+					.accessibilityHidden(_editMode.isEditing)
+				}
+
+				ToolbarItem(placement: .topBarTrailing) {
 					ZStack {
 						Menu {
 							_importActions()
@@ -243,6 +294,17 @@ struct LibraryView: View {
 			}
 			.onReceive(NotificationCenter.default.publisher(for: Notification.Name("Quill.signApp"))) { notification in
 				_selectedSigningAppPresenting = notification.object as? AnyApp
+			}
+			.onReceive(NotificationRouter.shared.$openApp) { app in
+				guard let app else { return }
+				_selectedInfoAppPresenting = app
+				DispatchQueue.main.async { NotificationRouter.shared.openApp = nil }
+			}
+			.onReceive(NotificationRouter.shared.$signApp) { app in
+				guard let app else { return }
+				_selectedSigningAppPresenting = app
+				// Cleared on the next turn: @Published emits before it stores, so clearing here would be overwritten.
+				DispatchQueue.main.async { NotificationRouter.shared.signApp = nil }
 			}
 			.onChange(of: _editMode) { mode in
 				if mode == .inactive {
@@ -340,6 +402,33 @@ extension LibraryView {
 			case .all: return .localized("All")
 			case .signed: return .localized("Signed")
 			case .imported: return .localized("Imported")
+			}
+		}
+	}
+}
+
+extension LibraryView {
+	enum Sort: String, CaseIterable {
+		case dateSigned
+		case name
+		case size
+		case expiresSoonest
+
+		var displayName: String {
+			switch self {
+			case .dateSigned: return .localized("Date Signed")
+			case .name: return .localized("Name")
+			case .size: return .localized("Size")
+			case .expiresSoonest: return .localized("Expires Soonest")
+			}
+		}
+
+		var icon: String {
+			switch self {
+			case .dateSigned: return "calendar"
+			case .name: return "textformat"
+			case .size: return "internaldrive"
+			case .expiresSoonest: return "clock.badge.exclamationmark"
 			}
 		}
 	}

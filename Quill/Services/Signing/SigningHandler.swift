@@ -192,6 +192,10 @@ extension SigningHandler {
 			infoDictionary.setObject(options.minimumAppRequirement.rawValue, forKey: "MinimumOSVersion" as NSCopying)
 		}
 
+		if let category = options.appCategory {
+			infoDictionary.setObject(category.rawValue, forKey: "LSApplicationCategoryType" as NSCopying)
+		}
+
 		if options.experiment_disableLiquidGlass { infoDictionary.setObject(true, forKey: "UIDesignRequiresCompatibility" as NSCopying) }
 		if options.experiment_supportLiquidGlass { infoDictionary.setObject(false, forKey: "UIDesignRequiresCompatibility" as NSCopying) }
 

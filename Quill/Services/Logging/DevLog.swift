@@ -237,6 +237,48 @@ final class DevLog: NSObject, @unchecked Sendable {
 
 		If you can, also attach the file from Settings → Developer Logs → Export Logs.
 		"""
+		return Self.issueURL(title: title, body: body)
+	}
+
+	/// A pre-filled bug report for a failed signing job.
+	func signingIssueURL(appName: String, error: String) -> URL? {
+		let shortError = error.components(separatedBy: .newlines).first ?? error
+		let title = "[Bug] Signing failed: \(shortError.prefix(80))"
+		let body = """
+		**What were you signing, and with which options?**
+
+
+		**App**
+		\(appName)
+
+		**Error**
+		```
+		\(error.prefix(1200))
+		```
+
+		**Recent signing log**
+		```
+		\(recentLines(category: "Signing", limit: 15).prefix(1600))
+		```
+
+		**Device**
+		```
+		\(Self.deviceSummary.trimmingCharacters(in: .whitespacesAndNewlines))
+		```
+
+		If you can, also attach the file from Settings → Developer Logs → Export Logs.
+		"""
+		return Self.issueURL(title: title, body: body)
+	}
+
+	/// The last lines of this launch's log that belong to a category or are errors.
+	func recentLines(category: String, limit: Int) -> String {
+		guard let text = try? String(contentsOf: sessionURL, encoding: .utf8) else { return "No log lines recorded." }
+		let lines = text.components(separatedBy: "\n").filter { $0.contains("[\(category)]") || $0.contains("[ERROR]") }
+		return lines.isEmpty ? "No log lines recorded." : lines.suffix(limit).joined(separator: "\n")
+	}
+
+	private static func issueURL(title: String, body: String) -> URL? {
 		var allowed = CharacterSet.urlQueryAllowed
 		allowed.remove(charactersIn: "&=+#?")
 		func encode(_ value: String) -> String { value.addingPercentEncoding(withAllowedCharacters: allowed) ?? "" }

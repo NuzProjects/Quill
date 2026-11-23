@@ -3,6 +3,7 @@ import Nuke
 import IDeviceSwift
 import OSLog
 import UserNotifications
+import CoreSpotlight
 
 @main
 struct QuillApp: App {
@@ -21,6 +22,11 @@ struct QuillApp: App {
 					.modifier(_UpdateCertificateSheet())
 					.environment(\.managedObjectContext, storage.context)
 					.onOpenURL(perform: _handleURL)
+					.onContinueUserActivity(CSSearchableItemActionType) { activity in
+						if let app = SpotlightIndexer.app(for: activity) {
+							NotificationRouter.shared.openApp = AnyApp(base: app)
+						}
+					}
 					.transition(.move(edge: .top).combined(with: .opacity))
 			}
 			.onReceive(NotificationCenter.default.publisher(for: .heartbeatInvalidHost)) { _ in
@@ -32,6 +38,7 @@ struct QuillApp: App {
 				}
 			}
 			.task { await GitHubReleases.shared.check(); GitHubReleases.schedule() }
+			.task { await SourceUpdateChecker.check() }
 			.task { await RemoteConfig.shared.refresh(force: true) }
 			.onChange(of: scenePhase) { phase in
 				if phase == .background {
@@ -39,6 +46,7 @@ struct QuillApp: App {
 				}
 				if phase == .active {
 					Task { await GitHubReleases.shared.check(); GitHubReleases.schedule() }
+					Task { await SourceUpdateChecker.check() }
 					Task { await RemoteConfig.shared.refresh() }
 				}
 			}
@@ -224,6 +232,13 @@ private struct _UpdateCertificateSheet: ViewModifier {
 
 class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
 	func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) { completionHandler([.banner, .sound, .list]) }
+	func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
+		let userInfo = response.notification.request.content.userInfo
+		Task { @MainActor in
+			NotificationRouter.shared.handle(userInfo)
+			completionHandler()
+		}
+	}
 	func application(
 		_ application: UIApplication,
 		didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil

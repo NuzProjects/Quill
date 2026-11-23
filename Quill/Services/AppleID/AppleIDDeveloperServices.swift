@@ -160,11 +160,11 @@ final class DeveloperServices {
 		try await _api("DELETE", "certificates/\(id)")
 	}
 
-	func bundleID(_ identifier: String, name: String) async throws -> String {
+	func bundleID(_ identifier: String, name: String) async throws -> (id: String, created: Bool) {
 		let (_, json) = try await _api("GET", "bundleIds", query: [("filter[identifier]", identifier), ("limit", "200")])
 		if let existing = Self._items(json).first(where: { (($0["attributes"] as? [String: Any])?["identifier"] as? String) == identifier }),
 		   let id = existing["id"] as? String {
-			return id
+			return (id, false)
 		}
 		let (_, created) = try await _api("POST", "bundleIds", body: ["data": [
 			"type": "bundleIds",
@@ -173,7 +173,7 @@ final class DeveloperServices {
 		guard let data = created["data"] as? [String: Any], let id = data["id"] as? String else {
 			throw DeveloperServicesError.badResponse("app id")
 		}
-		return id
+		return (id, true)
 	}
 
 	func profile(bundleID: String, certificateID: String, deviceIDs: [String]) async throws -> Data {

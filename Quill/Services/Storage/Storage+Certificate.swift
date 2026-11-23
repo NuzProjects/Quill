@@ -1,4 +1,5 @@
 import CoreData
+import UserNotifications
 import UIKit.UIImpactFeedbackGenerator
 import Zsign
 import NimbleExtensions
@@ -54,18 +55,24 @@ extension Storage {
 		return results[index]
 	}
 
-	func revokagedCertificate(for cert: CertificatePair) {
-		guard !cert.revoked, !AppleIDAccount.isAppleID(cert) else { return }
+	func revokagedCertificate(for cert: CertificatePair, completion: (() -> Void)? = nil) {
+		guard !cert.revoked, !AppleIDAccount.isAppleID(cert) else { completion?(); return }
 
 		Zsign.checkRevokage(
 			provisionPath: Storage.shared.getFile(.provision, from: cert)?.path ?? "",
 			p12Path: Storage.shared.getFile(.certificate, from: cert)?.path ?? "",
 			p12Password: cert.password ?? ""
 		) { (status, _, _) in
-			if status == 1 {
-				DispatchQueue.main.async {
-					cert.revoked = true
-					self.saveContext()
+			guard status == 1 else { completion?(); return }
+			DispatchQueue.main.async {
+				cert.revoked = true
+				self.saveContext()
+				Task { @MainActor in
+					WidgetDataWriter.shared.refresh()
+					CertificateExpiry.refresh()
+				}
+				self._notifyRevoked(cert)
+				if UIApplication.shared.applicationState == .active {
 					UINotificationFeedbackGenerator().notificationOccurred(.error)
 					self._presentWhenFree {
 						UIAlertController.showAlertWithOk(
@@ -75,6 +82,27 @@ extension Storage {
 						)
 					}
 				}
+				completion?()
+			}
+		}
+	}
+
+	/// A local notification, so a revocation found in the background still reaches the user.
+	private func _notifyRevoked(_ cert: CertificatePair) {
+		guard UIApplication.shared.applicationState != .active, let uuid = cert.uuid else { return }
+		let key = "Quill.notifiedRevocations"
+		var notified = Set(UserDefaults.standard.stringArray(forKey: key) ?? [])
+		guard !notified.contains(uuid) else { return }
+		let content = UNMutableNotificationContent()
+		content.title = "\(cert.nickname ?? "Your certificate") was revoked"
+		content.body = "Apps signed with it won't open anymore. Tap to see which apps need re-signing with another certificate."
+		content.sound = .default
+		content.userInfo = ["certificateUUID": uuid]
+		UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: "certificate-revoked-\(uuid)", content: content, trigger: nil)) { error in
+			guard error == nil else { return }
+			DispatchQueue.main.async {
+				notified.insert(uuid)
+				UserDefaults.standard.set(Array(notified), forKey: key)
 			}
 		}
 	}
@@ -88,13 +116,34 @@ extension Storage {
 	}
 
 	func checkAllRevocations() {
-		let key = "Feather.lastRevocationCheck"
-		let last = UserDefaults.standard.object(forKey: key) as? Date ?? .distantPast
-		guard Date().timeIntervalSince(last) > 6 * 3600 else { return }
-		UserDefaults.standard.set(Date(), forKey: key)
+		guard _revocationCheckDue() else { return }
 		for cert in (try? context.fetch(CertificatePair.fetchRequest())) ?? [] {
 			revokagedCertificate(for: cert)
 		}
+	}
+
+	/// Background refresh version: waits for every check so the task isn't ended early.
+	@MainActor
+	func checkAllRevocationsInBackground() async {
+		guard _revocationCheckDue() else { return }
+		let certificates = (try? context.fetch(CertificatePair.fetchRequest())) ?? []
+		for cert in certificates {
+			if Task.isCancelled { return }
+			await withCheckedContinuation { continuation in
+				// Resume once, whichever comes first: the check finishing or a 20 second limit.
+				let once = _ResumeOnce()
+				revokagedCertificate(for: cert) { if once.claim() { continuation.resume() } }
+				DispatchQueue.main.asyncAfter(deadline: .now() + 20) { if once.claim() { continuation.resume() } }
+			}
+		}
+	}
+
+	private func _revocationCheckDue() -> Bool {
+		let key = "Feather.lastRevocationCheck"
+		let last = UserDefaults.standard.object(forKey: key) as? Date ?? .distantPast
+		guard Date().timeIntervalSince(last) > 6 * 3600 else { return false }
+		UserDefaults.standard.set(Date(), forKey: key)
+		return true
 	}
 
 	enum FileRequest: String {
@@ -131,5 +180,16 @@ extension Storage {
 		let fetchRequest: NSFetchRequest<CertificatePair> = CertificatePair.fetchRequest()
 		fetchRequest.sortDescriptors = [NSSortDescriptor(keyPath: \CertificatePair.date, ascending: false)]
 		return (try? context.fetch(fetchRequest)) ?? []
+	}
+}
+
+private final class _ResumeOnce: @unchecked Sendable {
+	private let lock = NSLock()
+	private var done = false
+	func claim() -> Bool {
+		lock.lock(); defer { lock.unlock() }
+		if done { return false }
+		done = true
+		return true
 	}
 }

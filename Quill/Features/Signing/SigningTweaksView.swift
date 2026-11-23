@@ -5,6 +5,19 @@ struct SigningTweaksView: View {
 	@State private var _isAddingPresenting = false
 
 	@Binding var options: Options
+	/// The app being signed, so tweaks can be checked against it.
+	var app: AppInfoPresentable?
+	@Binding var findings: [URL: [TweakInspector.Finding]]
+
+	init(
+		options: Binding<Options>,
+		app: AppInfoPresentable? = nil,
+		findings: Binding<[URL: [TweakInspector.Finding]]> = .constant([:])
+	) {
+		self._options = options
+		self.app = app
+		self._findings = findings
+	}
 
 	var body: some View {
 		NBList(.localized("Tweaks")) {
@@ -37,6 +50,20 @@ struct SigningTweaksView: View {
 						.font(.footnote)
 						.foregroundColor(.disabled())
 				}
+			} footer: {
+				if !options.injectionFiles.isEmpty {
+					Text(.localized("Each tweak is checked for the right architecture, iOS version and libraries before it's injected."))
+				}
+			}
+		}
+		.task(id: options.injectionFiles) {
+			let files = options.injectionFiles
+			guard !files.isEmpty else { return }
+			let context = TweakInspector.Context.make(app: app, identifier: options.appIdentifier)
+			let result = await TweakInspector.inspect(files, context: context)
+			guard !Task.isCancelled else { return }
+			withAnimation(.snappy) {
+				for (url, list) in result { findings[url] = list }
 			}
 		}
 		.toolbar {
@@ -71,15 +98,18 @@ struct SigningTweaksView: View {
 extension SigningTweaksView {
 	@ViewBuilder
 	private func _file(tweak: URL) -> some View {
-		Label(tweak.lastPathComponent, systemImage: "folder.fill")
-			.lineLimit(2)
-			.frame(maxWidth: .infinity, alignment: .leading)
-			.swipeActions(edge: .trailing, allowsFullSwipe: true) {
-				_fileActions(tweak: tweak)
-			}
-			.contextMenu {
-				_fileActions(tweak: tweak)
-			}
+		VStack(alignment: .leading, spacing: 6) {
+			Label(tweak.lastPathComponent, systemImage: tweak.pathExtension.lowercased() == "deb" ? "shippingbox.fill" : "puzzlepiece.extension.fill")
+				.lineLimit(2)
+			_status(for: tweak)
+		}
+		.frame(maxWidth: .infinity, alignment: .leading)
+		.swipeActions(edge: .trailing, allowsFullSwipe: true) {
+			_fileActions(tweak: tweak)
+		}
+		.contextMenu {
+			_fileActions(tweak: tweak)
+		}
 	}
 
 	@ViewBuilder
@@ -93,5 +123,34 @@ extension SigningTweaksView {
 		} label: {
 			Label(.localized("Delete"), systemImage: "trash")
 		}
+	}
+
+	@ViewBuilder
+	private func _status(for tweak: URL) -> some View {
+		if let list = findings[tweak] {
+			if list.isEmpty {
+				Label(String.localized("Ready"), systemImage: "checkmark.circle.fill")
+					.font(.footnote)
+					.foregroundStyle(.green)
+			} else {
+				ForEach(list) { finding in
+					Label {
+						Text(_text(for: finding, in: tweak)).font(.footnote)
+					} icon: {
+						Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
+					}
+				}
+			}
+		} else if app != nil {
+			HStack(spacing: 6) {
+				ProgressView().controlSize(.small)
+				Text(.localized("Checking…")).font(.footnote).foregroundStyle(.secondary)
+			}
+		}
+	}
+
+	/// For a .deb, name the library inside it; for a .dylib the row already names it.
+	private func _text(for finding: TweakInspector.Finding, in tweak: URL) -> String {
+		finding.file == tweak.lastPathComponent ? finding.message : "\(finding.file): \(finding.message)"
 	}
 }

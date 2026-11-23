@@ -6,6 +6,9 @@ struct TabbarView: View {
 	@ObservedObject private var navigator = NavigatorPreferences.shared
 	@State private var selected: TabEnum = NavigatorPreferences.shared.tabs.first ?? .settings
 	@ObservedObject private var updater = QuillUpdater.shared
+	@ObservedObject private var router = NotificationRouter.shared
+	@ObservedObject private var sourceUpdates = UpdateManager.shared
+	@ObservedObject private var githubUpdates = GitHubReleases.shared
 	@State private var installingFromPrompt = false
 	@State private var promptedRelease: GitHubRelease?
 	@State private var acceptedPrompt = false
@@ -22,6 +25,10 @@ struct TabbarView: View {
 		)
 	}
 
+	private var _libraryUpdateCount: Int {
+		Set(sourceUpdates.updates.keys).union(githubUpdates.updates.keys).count
+	}
+
 	private var _tabBarAtTop: Bool {
 		guard #available(iOS 18, *) else { return false }
 		return UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular
@@ -33,6 +40,7 @@ struct TabbarView: View {
 				TabEnum.view(for: tab)
 					.environment(\.managedObjectContext, Storage.shared.context)
 					.tabItem { Label(tab.title, systemImage: tab.icon) }
+					.badge(tab == .library ? _libraryUpdateCount : 0)
 					.tag(tab)
 			}
 		}
@@ -59,6 +67,34 @@ struct TabbarView: View {
 						.id(update.id)
 					}
 				}
+		}
+		.onChange(of: router.openLibrary) { open in
+			guard open else { return }
+			router.openLibrary = false
+			if navigator.tabs.contains(.library), selected != .library {
+				TabTransition.crossfade()
+				selected = .library
+			}
+		}
+		.onChange(of: router.openApp?.id) { id in
+			guard id != nil, navigator.tabs.contains(.library), selected != .library else { return }
+			TabTransition.crossfade()
+			selected = .library
+		}
+		.onChange(of: router.signApp?.id) { id in
+			guard id != nil, navigator.tabs.contains(.library), selected != .library else { return }
+			TabTransition.crossfade()
+			selected = .library
+		}
+		.sheet(item: $router.certificate) { certificate in
+			NavigationStack {
+				CertificateOverviewDetailView(cert: certificate)
+					.toolbar {
+						ToolbarItem(placement: .confirmationAction) {
+							Button(.localized("Done")) { router.certificate = nil }
+						}
+					}
+			}
 		}
 		.onChange(of: navigator.tabs) { tabs in
 			if !tabs.contains(selected) { selected = tabs.contains(.settings) ? .settings : (tabs.first ?? .settings) }

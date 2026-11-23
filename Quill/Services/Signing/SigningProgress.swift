@@ -29,6 +29,8 @@ final class SigningProgress: ObservableObject {
 		var stage: Stage
 		let isUpdate: Bool
 		var megabytes: Double = 0
+		var failureReason: String?
+		var failureDetail: String?
 		let started = Date()
 
 		func secondsLeft(at date: Date = Date()) -> Int? {
@@ -80,14 +82,14 @@ final class SigningProgress: ObservableObject {
 		#endif
 	}
 
-	private func notifyIfInBackground(name: String, success: Bool) {
+	private func notifyIfInBackground(name: String, success: Bool, reason: String? = nil) {
 		guard UIApplication.shared.applicationState != .active else { return }
 		let center = UNUserNotificationCenter.current()
 		center.getNotificationSettings { settings in
 			guard settings.authorizationStatus == .authorized || settings.authorizationStatus == .provisional else { return }
 			let content = UNMutableNotificationContent()
 			content.title = success ? String.localized("Signing complete") : String.localized("Signing failed")
-			content.body = name
+			content.body = reason.map { "\(name): \($0)" } ?? name
 			content.sound = .default
 			center.add(UNNotificationRequest(identifier: "Quill.signing.\(UUID().uuidString)", content: content, trigger: nil))
 		}
@@ -106,8 +108,12 @@ final class SigningProgress: ObservableObject {
 		remove(id, after: 1_200_000_000)
 	}
 	func isCancelled(_ id: UUID) -> Bool { cancelled.contains(id) }
-	func finish(_ id: UUID, success: Bool) {
+	func finish(_ id: UUID, success: Bool, reason: String? = nil) {
 		guard !cancelled.contains(id) else { return }
+		if !success, let index = jobs.firstIndex(where: { $0.id == id }) {
+			jobs[index].failureReason = reason.map(Self.shortReason)
+			jobs[index].failureDetail = reason
+		}
 		if success, let job = jobs.first(where: { $0.id == id }), job.megabytes >= 1 {
 			let rate = Date().timeIntervalSince(job.started) / job.megabytes
 			let blended = Self.secondsPerMegabyte.map { $0 * 0.6 + rate * 0.4 } ?? rate
@@ -118,8 +124,14 @@ final class SigningProgress: ObservableObject {
 		UINotificationFeedbackGenerator().notificationOccurred(success ? .success : .error)
 		endLease(id)
 		letGoOfBackground()
-		if !(jobs.first(where: { $0.id == id })?.isUpdate ?? false) { notifyIfInBackground(name: name, success: success) }
-		remove(id, after: success ? 1_500_000_000 : 4_000_000_000)
+		if !(jobs.first(where: { $0.id == id })?.isUpdate ?? false) { notifyIfInBackground(name: name, success: success, reason: success ? nil : reason.map(Self.shortReason)) }
+		remove(id, after: success ? 1_500_000_000 : 8_000_000_000)
+	}
+	/// Keeps the first sentence of an error so it fits on the card.
+	nonisolated static func shortReason(_ message: String) -> String {
+		let trimmed = message.trimmingCharacters(in: .whitespacesAndNewlines)
+		let firstLine = trimmed.components(separatedBy: .newlines).first ?? trimmed
+		return firstLine.count > 120 ? String(firstLine.prefix(117)) + "…" : firstLine
 	}
 	private func remove(_ id: UUID, after delay: UInt64) {
 		Task {
@@ -137,18 +149,27 @@ final class SigningProgress: ObservableObject {
 struct SigningProgressPanel: View {
 	@ObservedObject private var progress = SigningProgress.shared
 	@State private var confirming: SigningProgress.Job?
+	@State private var failure: SigningFailure?
 	var body: some View {
 		ZStack {
 			if let job = progress.visibleJobs.first {
 				card(job)
 					.transition(.progressPanel)
-					.onTapGesture { if job.stage.isActive { confirming = job } }
+					.onTapGesture {
+						if job.stage.isActive { confirming = job }
+						else if job.stage == .failed {
+							failure = SigningFailure(appName: job.name, icon: job.icon, error: job.failureDetail ?? job.failureReason ?? job.stage.title)
+						}
+					}
 			}
 		}
 		.animation(.smooth(duration: 0.4), value: progress.visibleJobs.first?.id)
 		.confirmationDialog("Cancel signing \(confirming?.name ?? "")?", isPresented: _isConfirming, titleVisibility: .visible) {
 			Button("Cancel Signing", role: .destructive) { if let job = confirming { progress.cancel(job.id) } }
 			Button("Keep Signing", role: .cancel) {}
+		}
+		.sheet(item: $failure) { failure in
+			SigningFailureView(failure: failure)
 		}
 	}
 	private var _isConfirming: Binding<Bool> {
@@ -166,15 +187,26 @@ struct SigningProgressPanel: View {
 					ProgressPanelIcon(image: job.icon)
 					VStack(alignment: .leading, spacing: 2) {
 						Text(job.name).font(.subheadline.weight(.semibold)).lineLimit(1)
-						Text(job.stage.title).font(.caption).foregroundStyle(Color(uiColor: .secondaryLabel))
+						if job.stage == .failed, let reason = job.failureReason {
+							Text(reason).font(.caption).foregroundStyle(.red).lineLimit(2)
+							Text(.localized("Tap for details")).font(.caption2).foregroundStyle(Color(uiColor: .tertiaryLabel))
+						} else {
+							Text(job.stage.title).font(.caption).foregroundStyle(Color(uiColor: .secondaryLabel))
+						}
 					}
 					Spacer(minLength: 8)
 					TimelineView(.periodic(from: .now, by: 1)) { context in
+						let seconds = job.secondsLeft(at: context.date)
 						if let left = _timeLeft(job, at: context.date) {
 							Text(left).font(.subheadline.monospacedDigit()).foregroundStyle(Color(uiColor: .secondaryLabel))
+								.numericRoll(Int(seconds ?? 0))
+								.animation(.snappy, value: Int(seconds ?? 0))
 						}
 					}
-					if progress.visibleJobs.count > 1 { Text("+\(progress.visibleJobs.count - 1)").font(.caption.monospacedDigit()) }
+					if progress.visibleJobs.count > 1 {
+						Text("+\(progress.visibleJobs.count - 1)").font(.caption.monospacedDigit())
+							.animatedNumber(progress.visibleJobs.count)
+					}
 				}
 				ProgressView(value: job.stage.fraction)
 					.accessibilityLabel(job.stage.title)
@@ -216,6 +248,8 @@ struct UpdateProgressPanel: View {
 		.task { icon = await Task.detached { iconTest(Bundle.main.bundleURL) }.value }
 	}
 
+	private func _percent(_ fraction: Double) -> Int { Int(min(1, max(0, fraction)) * 100) }
+
 	private func card(_ state: (title: String, fraction: Double)) -> some View {
 		ProgressPanelSurface {
 			VStack(alignment: .leading, spacing: 9) {
@@ -226,9 +260,15 @@ struct UpdateProgressPanel: View {
 						Text(state.title).font(.caption).foregroundStyle(Color(uiColor: .secondaryLabel))
 					}
 					Spacer(minLength: 8)
+					Text("\(_percent(state.fraction))%")
+						.font(.caption.monospacedDigit())
+						.foregroundStyle(Color(uiColor: .secondaryLabel))
+						.numericRoll(_percent(state.fraction))
+						.animation(.snappy, value: _percent(state.fraction))
 				}
 				ProgressView(value: min(1, max(0, state.fraction)))
 					.accessibilityLabel(state.title)
+					.accessibilityValue("\(_percent(state.fraction))%")
 			}.padding(16)
 		}
 		.padding(.horizontal, 12)

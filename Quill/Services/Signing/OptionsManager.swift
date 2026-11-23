@@ -53,6 +53,8 @@ struct Options: Codable, Equatable {
 	var appVersion: String?
 	var appIdentifier: String?
 	var appEntitlementsFile: URL?
+	/// Sets LSApplicationCategoryType, which iOS can use to pick the App Library folder.
+	var appCategory: AppCategory?
 	var appAppearance: AppAppearance
 	var minimumAppRequirement: MinimumAppRequirement
 	var signingOption: SigningOption
@@ -123,6 +125,39 @@ struct Options: Codable, Equatable {
 		post_installAppAfterSigned: false,
 		post_deleteAppAfterSigned: false
 	)
+
+	/// App Library folders, mapped to the category key iOS reads from Info.plist.
+	enum AppCategory: String, Codable, CaseIterable, Identifiable {
+		case social = "public.app-category.social-networking"
+		case utilities = "public.app-category.utilities"
+		case productivity = "public.app-category.productivity"
+		case creativity = "public.app-category.photography"
+		case entertainment = "public.app-category.entertainment"
+		case reading = "public.app-category.news"
+		case games = "public.app-category.games"
+		case shopping = "public.app-category.lifestyle"
+		case health = "public.app-category.healthcare-fitness"
+		case travel = "public.app-category.travel"
+		case education = "public.app-category.education"
+
+		var id: String { rawValue }
+
+		var localizedDescription: String {
+			switch self {
+			case .social: .localized("Social")
+			case .utilities: .localized("Utilities")
+			case .productivity: .localized("Productivity & Finance")
+			case .creativity: .localized("Creativity")
+			case .entertainment: .localized("Entertainment")
+			case .reading: .localized("Information & Reading")
+			case .games: .localized("Games")
+			case .shopping: .localized("Shopping & Food")
+			case .health: .localized("Health & Fitness")
+			case .travel: .localized("Travel")
+			case .education: .localized("Education")
+			}
+		}
+	}
 
 	enum AppAppearance: String, Codable, CaseIterable, LocalizedDescribable {
 		case `default`

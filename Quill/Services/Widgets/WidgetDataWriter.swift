@@ -22,6 +22,7 @@ final class WidgetDataWriter {
 	}
 
 	func refresh() {
+		SpotlightIndexer.update()
 		var snapshot = _makeSnapshot()
 		if var previous = lastWritten {
 			previous.updated = snapshot.updated
