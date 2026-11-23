@@ -114,6 +114,7 @@ Quill has no ads, no tracking and no analytics. Certificates and Apple ID creden
 ## Links
 
 - Website and FAQ: https://quill.madebynuz.dev
+- Compare Quill with Feather, AltStore, SideStore, Sideloadly and ESign: https://quill.madebynuz.dev/compare
 - Source code: https://github.com/NuzProjects/Quill
 - Releases and changelog: https://github.com/NuzProjects/Quill/releases
 - Report an issue: https://github.com/NuzProjects/Quill/issues/new/choose

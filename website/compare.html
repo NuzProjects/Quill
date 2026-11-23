@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Quill vs Feather, AltStore, SideStore, Sideloadly and ESign</title>
+<meta name="description" content="How Quill compares with Feather, AltStore, SideStore, Sideloadly and ESign: on-device signing, developer certificates, free Apple ID, tweak injection, open source and more.">
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" href="/assets/favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="canonical" href="https://quill.madebynuz.dev/compare">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta name="author" content="NuzFlameV2">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebPage",
+      "@id": "https://quill.madebynuz.dev/compare#page",
+      "url": "https://quill.madebynuz.dev/compare",
+      "name": "Quill vs Feather, AltStore, SideStore, Sideloadly and ESign",
+      "description": "How Quill compares with Feather, AltStore, SideStore, Sideloadly and ESign: on-device signing, developer certificates, free Apple ID, tweak injection, open source and more.",
+      "isPartOf": {
+        "@id": "https://quill.madebynuz.dev/#website"
+      },
+      "about": {
+        "@type": "SoftwareApplication",
+        "name": "Quill",
+        "url": "https://quill.madebynuz.dev/"
+      }
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "How is Quill different from Feather?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Quill is a fork of Feather. It adds in-app self-updates, a pre-sign compatibility check, an entitlements viewer, a tweak checker, certificate expiry and revocation alerts, Home Screen widgets, Live Activities, Siri and Shortcuts, Spotlight search, Backup and Transfer, GitHub release sources, library sorting and a customizable tab bar."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is Quill an alternative to AltStore and SideStore?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Quill signs and installs on the device and reads AltStore sources. With a developer certificate, apps last as long as the certificate does instead of needing a refresh every 7 days. A free Apple ID also works, with the same 7-day limit."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does Quill need a computer?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. Sideloadly runs on a Mac or PC, and AltStore needs a computer to set up. Quill does everything on the iPhone or iPad."
+          }
+        }
+      ]
+    }
+  ]
+}
+</script>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Quill">
+<meta property="og:url" content="https://quill.madebynuz.dev/compare">
+<meta property="og:title" content="Quill vs Feather, AltStore, SideStore, Sideloadly and ESign">
+<meta property="og:description" content="How Quill compares with Feather, AltStore, SideStore, Sideloadly and ESign: on-device signing, developer certificates, free Apple ID, tweak injection, open source and more.">
+<meta property="og:image" content="https://quill.madebynuz.dev/assets/banner.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Quill vs Feather, AltStore, SideStore, Sideloadly and ESign">
+<meta name="twitter:description" content="How Quill compares with Feather, AltStore, SideStore, Sideloadly and ESign: on-device signing, developer certificates, free Apple ID, tweak injection, open source and more.">
+<meta name="twitter:image" content="https://quill.madebynuz.dev/assets/banner.png">
+<style>
+:root {
+  --bg: #ffffff;
+  --soft: #f5f5f7;
+  --tint: #eff3fe;
+  --text: #1d1d1f;
+  --text-2: #6e6e73;
+  --line: rgba(0, 0, 0, 0.08);
+  --accent: #5b85f0;
+  --accent-deep: #4768be;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  color-scheme: light;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+:focus:not(:focus-visible) { outline: none; }
+html { -webkit-text-size-adjust: 100%; overflow-x: clip; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", Inter, "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  line-height: 1.47;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+a { color: var(--accent-deep); text-decoration: none; }
+img { display: block; max-width: 100%; -webkit-user-drag: none; user-select: none; -webkit-user-select: none; }
+svg { flex-shrink: 0; }
+.wrap { max-width: 1040px; margin: 0 auto; padding: 0 24px; }
+[id] { scroll-margin-top: 72px; }
+
+/* Header: floating pill, hidden at the top, slides in once you scroll */
+.nav {
+  position: fixed; top: 14px; left: 0; right: 0; z-index: 20; padding: 0 16px;
+  opacity: 0; transform: translateY(-14px); pointer-events: none;
+  transition: opacity 0.4s var(--ease), transform 0.4s var(--ease);
+}
+.nav.visible { opacity: 1; transform: none; }
+.nav.visible .nav-inner { pointer-events: auto; }
+.nav-inner {
+  max-width: 720px; margin: 0 auto; height: 52px; padding: 0 8px 0 16px;
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  border-radius: 999px; background: rgba(255, 255, 255, 0.86);
+  backdrop-filter: saturate(180%) blur(18px); -webkit-backdrop-filter: saturate(180%) blur(18px);
+  box-shadow: 0 0 0 1px var(--line), 0 6px 24px rgba(0, 0, 0, 0.06);
+}
+.brand { display: flex; align-items: center; gap: 10px; color: var(--text); font-weight: 600; font-size: 17px; letter-spacing: -0.01em; }
+.brand img { width: 28px; height: 28px; border-radius: 7px; }
+.nav-links { display: flex; align-items: center; gap: 4px; font-size: 14px; }
+.nav-links a { padding: 8px 12px; border-radius: 999px; color: var(--text); opacity: 0.72; transition: opacity 0.2s, background-color 0.2s; }
+.nav-links a:hover { opacity: 1; background: var(--soft); }
+.nav-links a.cta-link { opacity: 1; background: var(--accent); color: #fff; font-weight: 500; margin-left: 6px; padding: 8px 16px; }
+.nav-links a.cta-link:hover { background: var(--accent-deep); }
+.progress { display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 30; height: 2px; background: var(--accent); transform: scaleX(0); transform-origin: 0 50%; pointer-events: none; }
+
+/* Hero */
+.hero { position: relative; text-align: center; padding: 104px 0 0; overflow-x: clip; }
+.hero-icon {
+  width: 128px; height: 128px; margin: 0 auto 32px; border-radius: 29px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  animation: rise 1.2s var(--ease) both, float 7s ease-in-out 1.2s infinite;
+}
+@keyframes float { 0%, 100% { transform: translate3d(0, 0, 0); } 50% { transform: translate3d(0, -6px, 0); } }
+.hero h1 { font-size: clamp(52px, 9.5vw, 96px); font-weight: 600; letter-spacing: -0.035em; line-height: 1; animation: rise 1.2s var(--ease) 0.08s both; }
+.lead { font-size: clamp(20px, 3vw, 26px); color: var(--text-2); font-weight: 400; letter-spacing: -0.015em; line-height: 1.28; max-width: 620px; margin: 20px auto 0; animation: rise 1.2s var(--ease) 0.16s both; }
+.actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 36px; animation: rise 1.2s var(--ease) 0.24s both; }
+.fork { margin-top: 16px; font-size: 14px; color: var(--text-2); animation: rise 1.2s var(--ease) 0.36s both; }
+@keyframes rise { from { opacity: 0; transform: translate3d(0, 14px, 0); } to { opacity: 1; transform: translate3d(0, 0, 0); } }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-width: 180px; height: 48px; padding: 0 28px; border-radius: 980px; font-size: 17px; font-weight: 500;
+  transition: transform 0.18s var(--ease), box-shadow 0.18s var(--ease), background-color 0.18s var(--ease);
+}
+.btn svg { width: 19px; height: 19px; }
+.btn-primary { background: var(--accent); color: #fff; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06); }
+@media (hover: hover) { .btn-primary:hover { background: var(--accent-deep); } }
+.btn-secondary { background: var(--soft); color: var(--text); box-shadow: inset 0 0 0 1px var(--line); }
+@media (hover: hover) { .btn-secondary:hover { background: #ececf1; } }
+.btn:active { transform: scale(0.97); }
+
+.devices { margin: 64px auto 0; max-width: 980px; }
+.devices .carousel { display: block; transform: translate3d(0, calc(var(--p, 0) * -28px), 0) scale(calc(1 + var(--p, 0) * 0.035)); transform-origin: 50% 0; }
+.devices img { width: 100%; height: auto; }
+
+/* Scroll reveals */
+.reveal { opacity: 0; transform: translate3d(0, 12px, 0); transition: opacity 0.5s var(--ease), transform 0.5s var(--ease); transition-delay: var(--d, 0s); }
+.reveal.in { opacity: 1; transform: none; }
+
+/* Highlights */
+.highlights { display: grid; grid-template-columns: repeat(3, 1fr); margin-top: 88px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.highlight { padding: 32px 12px; text-align: center; }
+.highlight + .highlight { border-left: 1px solid var(--line); }
+.highlight strong { display: block; font-size: 30px; font-weight: 600; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.highlight > span { color: var(--text-2); font-size: 15px; }
+
+/* Sections */
+section.block { margin-top: 128px; }
+.title { text-align: center; font-size: clamp(34px, 5.6vw, 56px); font-weight: 600; letter-spacing: -0.03em; line-height: 1.05; }
+.sub { text-align: center; color: var(--text-2); font-size: 20px; max-width: 580px; margin: 16px auto 0; line-height: 1.4; }
+
+.features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 56px; }
+.card {
+  background: var(--soft); border-radius: 20px; padding: 28px;
+  transition: transform 0.3s var(--ease), box-shadow 0.3s var(--ease), background-color 0.18s var(--ease);
+}
+.card:hover { transform: translateY(-2px); background: #f2f2f6; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06); }
+.card .icon { width: 48px; height: 48px; border-radius: 14px; background: #fff; color: var(--accent-deep); display: grid; place-items: center; margin-bottom: 24px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); transition: transform 0.3s var(--ease); }
+.card:hover .icon { transform: rotate(-6deg); }
+.card .icon svg { width: 26px; height: 26px; }
+.card h3 { font-size: 20px; font-weight: 600; letter-spacing: -0.02em; }
+.card p { color: var(--text-2); font-size: 16px; margin-top: 8px; line-height: 1.45; }
+
+.steps { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 64px; }
+.steps::before { content: ""; position: absolute; top: 23px; left: 16.7%; right: 16.7%; height: 2px; background: var(--accent); opacity: 0.35; border-radius: 2px; transform: scaleX(0); transform-origin: 0 50%; transition: transform 1s var(--ease) 0.15s; }
+.steps.in::before { transform: scaleX(1); }
+.step { position: relative; text-align: center; padding: 0 12px; }
+.step .num { width: 48px; height: 48px; margin: 0 auto 20px; border-radius: 50%; background: var(--accent); color: #fff; display: grid; place-items: center; font-weight: 600; font-size: 18px; font-variant-numeric: tabular-nums; transform: scale(0.7); transition: transform 0.45s var(--ease); transition-delay: calc(var(--d, 0s) + 0.15s); }
+.step.in .num { transform: none; }
+.step h3 { font-size: 20px; font-weight: 600; letter-spacing: -0.02em; }
+.step p { color: var(--text-2); font-size: 16px; margin-top: 8px; }
+
+.faq { max-width: 720px; margin: 48px auto 0; }
+.qa { border-bottom: 1px solid var(--line); }
+.qa button {
+  width: 100%; background: none; border: 0; cursor: pointer; font: inherit; color: var(--text); text-align: left;
+  display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 20px 0;
+  font-size: 18px; font-weight: 600; letter-spacing: -0.015em;
+}
+.qa .plus { position: relative; flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%; background: var(--soft); display: grid; place-items: center; transition: transform 0.4s var(--ease), background 0.3s; }
+.qa .plus::before, .qa .plus::after { content: ""; position: absolute; width: 11px; height: 1.6px; background: var(--text-2); border-radius: 2px; }
+.qa .plus::after { transform: rotate(90deg); }
+.qa button:hover .plus { background: var(--tint); }
+.qa.open .plus { transform: rotate(45deg); background: var(--tint); }
+.qa .answer { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.55s var(--ease); }
+.qa.open .answer { grid-template-rows: 1fr; }
+.qa .answer > div { overflow: hidden; }
+.qa .answer p { color: var(--text-2); font-size: 16px; line-height: 1.55; padding: 0 0 20px; opacity: 0; transform: translate3d(0, -6px, 0); transition: opacity 0.4s ease, transform 0.4s var(--ease); }
+.qa.open .answer p { opacity: 1; transform: none; transition-delay: 0.08s; }
+
+.cta {
+  position: relative; overflow: hidden; margin-top: 136px; border-radius: 32px; padding: 80px 28px; text-align: center;
+  background: var(--tint);
+}
+.cta img { width: 84px; height: 84px; border-radius: 19px; margin: 0 auto 24px; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08); animation: float 7s ease-in-out infinite; }
+.cta h2 { font-size: clamp(34px, 5vw, 52px); font-weight: 600; letter-spacing: -0.03em; }
+.cta p { color: var(--text-2); font-size: 19px; margin-top: 12px; }
+.cta .actions { animation: none; }
+.cta .btn-primary { box-shadow: none; }
+.cta .btn-secondary { background: #fff; }
+.cta .btn-secondary:hover { background: #f9f9fb; }
+
+footer { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding: 40px 0 56px; margin-top: 56px; border-top: 1px solid var(--line); font-size: 12px; color: var(--text-2); }
+footer p { max-width: 520px; line-height: 1.5; }
+footer nav { display: flex; gap: 20px; }
+footer a { color: var(--text-2); }
+footer a:hover { color: var(--text); }
+
+@media (max-width: 820px) {
+  .nav-links .optional { display: none; }
+  .hero { padding-top: 72px; }
+  .features { grid-template-columns: 1fr 1fr; }
+  .steps { grid-template-columns: 1fr; gap: 34px; }
+  .steps::before { display: none; }
+  section.block { margin-top: 96px; }
+  .cta { margin-top: 104px; padding: 64px 24px; }
+}
+@media (max-width: 600px) {
+  .wrap { padding-left: max(20px, env(safe-area-inset-left)); padding-right: max(20px, env(safe-area-inset-right)); }
+  .nav { top: 10px; padding: 0 10px; }
+  .nav-links { gap: 2px; }
+  .nav-links a { padding: 8px 10px; }
+  .hero { padding-top: 56px; }
+  .hero-icon { width: 104px; height: 104px; border-radius: 24px; margin-bottom: 24px; }
+  .lead { font-size: 19px; margin-top: 12px; max-width: 340px; }
+  .actions { flex-direction: column; align-items: stretch; gap: 12px; max-width: 320px; margin: 32px auto 0; }
+  .btn { min-width: 0; width: 100%; padding: 0 24px; }
+    .fork { font-size: 13px; max-width: 300px; margin-left: auto; margin-right: auto; }
+  .devices { margin-top: 44px; }
+  .highlights { grid-template-columns: 1fr; margin-top: 56px; }
+  .highlight { padding: 24px 8px; }
+  .highlight + .highlight { border-left: 0; border-top: 1px solid var(--line); }
+  .highlight strong { font-size: 24px; }
+  section.block { margin-top: 80px; }
+  .sub { font-size: 17px; margin-top: 12px; }
+  .features { grid-template-columns: 1fr; gap: 12px; margin-top: 36px; }
+  .card { padding: 24px; border-radius: 16px; display: grid; grid-template-columns: 44px 1fr; column-gap: 16px; align-items: start; }
+  .card .icon { width: 44px; height: 44px; border-radius: 12px; margin: 0; grid-row: span 2; }
+  .card h3 { font-size: 18px; align-self: center; }
+  .card p { font-size: 15px; margin-top: 4px; }
+  .card:hover { transform: none; box-shadow: none; }
+  .steps { margin-top: 36px; }
+  .step h3 { font-size: 18px; }
+  .step p { font-size: 15px; }
+  .faq { margin-top: 32px; }
+  .qa button { font-size: 16px; padding: 16px 0; }
+  .qa .answer p { font-size: 15px; }
+  .cta { margin-top: 88px; padding: 48px 20px; border-radius: 24px; }
+  .cta img { width: 72px; height: 72px; border-radius: 16px; }
+  .cta p { font-size: 17px; }
+  footer { flex-direction: column; align-items: center; text-align: center; padding-bottom: max(40px, env(safe-area-inset-bottom)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  .reveal { opacity: 1; transform: none; }
+  .steps::before, .step .num, .devices .carousel { transform: none; }
+  .carousel .slide { transition: none; }
+  .progress { display: none; }
+}
+/* Screenshot carousel: slides stack and crossfade */
+.carousel { position: relative; }
+.carousel .slide { display: block; transition: opacity 1.5s ease; }
+.carousel .slide + .slide { position: absolute; inset: 0; }
+.carousel .slide:not(.on) { opacity: 0; pointer-events: none; }
+.carousel .slide img { display: block; width: 100%; height: auto; }
+.carousel .slide + .slide img { height: 100%; object-fit: contain; }
+.dots { display: flex; justify-content: center; gap: 10px; margin-top: 14px; }
+.dots[hidden] { display: none; }
+.dots button { width: 8px; height: 8px; padding: 0; border: 0; border-radius: 4px; background: color-mix(in srgb, var(--accent) 30%, transparent); cursor: pointer; transition: width .4s ease, background .4s ease; }
+.dots button[aria-current="true"] { width: 22px; background: var(--accent); }
+
+/* Compare page */
+.page-head { text-align: center; padding: 120px 0 0; }
+.page-head h1 { font-size: clamp(40px, 7vw, 72px); font-weight: 600; letter-spacing: -0.035em; line-height: 1.02; animation: rise 1.2s var(--ease) both; }
+.page-head .lead { animation: rise 1.2s var(--ease) 0.1s both; }
+.tablebox { margin-top: 48px; border-radius: 20px; background: var(--soft); padding: 8px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+table.cmp { width: 100%; min-width: 820px; border-collapse: separate; border-spacing: 0; font-size: 15px; text-align: left; }
+.cmp th, .cmp td { padding: 16px 18px; vertical-align: top; line-height: 1.4; border-bottom: 1px solid var(--line); }
+.cmp tr:last-child td, .cmp tr:last-child th { border-bottom: 0; }
+.cmp thead th { font-size: 16px; font-weight: 600; letter-spacing: -0.01em; white-space: nowrap; }
+.cmp tbody th { font-weight: 600; color: var(--text); width: 22%; letter-spacing: -0.01em; }
+.cmp td { color: var(--text-2); }
+.cmp td b { color: var(--text); font-weight: 600; }
+.cmp .q { background: var(--tint); }
+.cmp thead .q { color: var(--accent-deep); border-radius: 14px 14px 0 0; }
+.cmp tbody .q { color: var(--text); }
+.cmp tr:last-child .q { border-radius: 0 0 14px 14px; }
+.note { color: var(--text-2); font-size: 14px; text-align: center; margin: 20px auto 0; max-width: 620px; line-height: 1.5; }
+.pick { max-width: 720px; margin: 48px auto 0; display: grid; gap: 12px; }
+.pick div { background: var(--soft); border-radius: 20px; padding: 22px 26px; }
+.pick h3 { font-size: 18px; font-weight: 600; letter-spacing: -0.015em; }
+.pick p { color: var(--text-2); font-size: 16px; margin-top: 6px; line-height: 1.45; }
+@media (max-width: 600px) { .page-head { padding-top: 96px; } .cmp th, .cmp td { padding: 14px; } }
+</style>
+</head>
+<body>
+<header class="nav visible" aria-label="Site">
+  <div class="nav-inner">
+    <a class="brand" href="/"><img src="/assets/icon.png" alt="">Quill</a>
+    <nav class="nav-links">
+      <a class="optional" href="/#features">Features</a>
+      <a href="/compare" aria-current="page">Compare</a>
+      <a href="/#faq" class="optional">FAQ</a>
+      <a class="cta-link" href="/#get">Download</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="page-head wrap">
+    <h1>How Quill compares</h1>
+    <p class="lead">Quill next to Feather, AltStore, SideStore, Sideloadly and ESign.</p>
+  </div>
+
+  <div class="wrap">
+    <div class="tablebox reveal" role="region" aria-label="Comparison table" tabindex="0">
+      <table class="cmp"><thead><tr><th scope="col">Feature</th><th scope="col" class="q">Quill</th><th scope="col">Feather</th><th scope="col">AltStore and SideStore</th><th scope="col">Sideloadly</th><th scope="col">ESign</th></tr></thead><tbody><tr><th scope="row">Signs and installs on the device</th><td class="q"><b>Yes</b></td><td>Yes</td><td>Needs a computer to set up</td><td>No, needs a Mac or PC</td><td>Yes</td></tr><tr><th scope="row">Developer certificate (.p12)</th><td class="q"><b>Yes</b></td><td>Yes</td><td>No</td><td>No</td><td>Yes</td></tr><tr><th scope="row">Free Apple ID</th><td class="q"><b>Yes</b></td><td>No</td><td>Yes</td><td>Yes</td><td>No</td></tr><tr><th scope="row">How long apps last</th><td class="q"><b>As long as the certificate does, or 7 days with a free Apple ID</b></td><td>As long as the certificate does</td><td>7 days, then refresh</td><td>7 days with a free Apple ID</td><td>As long as the certificate does</td></tr><tr><th scope="row">Tweak injection</th><td class="q"><b>Yes</b>, with a tweak checker</td><td>Yes</td><td>No</td><td>Yes</td><td>Yes</td></tr><tr><th scope="row">Open source</th><td class="q"><b>Yes</b>, GPL-3.0</td><td>Yes, GPL-3.0</td><td>Yes</td><td>No</td><td>No</td></tr><tr><th scope="row">Reads AltStore sources</th><td class="q"><b>Yes</b></td><td>Yes</td><td>Yes</td><td>No</td><td>No</td></tr><tr><th scope="row">Updates itself</th><td class="q"><b>Yes</b>, from inside the app</td><td>No</td><td>No</td><td>No</td><td>No</td></tr></tbody></table>
+    </div>
+    <p class="note">Based on each project's public information in November 2026. These apps change often, so check before you decide. Spotted a mistake? <a href="https://github.com/NuzProjects/Quill/issues/new/choose">Open an issue</a>.</p>
+  </div>
+
+  <section class="block wrap">
+    <h2 class="title reveal">What Quill adds to Feather</h2>
+    <p class="sub reveal">Quill is a fork, so everything you know from Feather is still here.</p>
+    <div class="features">
+      <article class="card reveal"><h3>Updates itself</h3><p>New Quill versions download, sign and install from inside the app, with optional betas.</p></article>
+      <article class="card reveal" style="--d:0.06s"><h3>Checks before you sign</h3><p>A pre-sign check, an entitlements viewer and a tweak checker catch problems before they cost you a certificate or a day.</p></article>
+      <article class="card reveal" style="--d:0.12s"><h3>Certificate alerts</h3><p>Warnings before a certificate expires, background revocation checks, and a shortcut to the apps you need to re-sign.</p></article>
+      <article class="card reveal"><h3>Built into iOS</h3><p>Home Screen widgets, Live Activities, Siri and Shortcuts, and Spotlight search for your library.</p></article>
+      <article class="card reveal" style="--d:0.06s"><h3>Backup and Transfer</h3><p>Move your apps, certificates, sources and settings to another device.</p></article>
+      <article class="card reveal" style="--d:0.12s"><h3>Sources and library</h3><p>GitHub release sources, library sorting and a customizable tab bar.</p></article>
+    </div>
+  </section>
+
+  <section class="block wrap">
+    <h2 class="title reveal">Which one should you pick?</h2>
+    <div class="pick">
+      <div class="reveal"><h3>Pick Quill if</h3><p>You want to sign and install on the device with no computer, and you have a developer certificate (or want to try a free Apple ID).</p></div>
+      <div class="reveal" style="--d:.06s"><h3>Pick AltStore or SideStore if</h3><p>You only have a free Apple ID, do not mind refreshing every 7 days, and want a store-style app with its own sources.</p></div>
+      <div class="reveal" style="--d:.12s"><h3>Pick Sideloadly if</h3><p>You are happy to plug your device into a Mac or PC every time you install.</p></div>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <div class="cta reveal" id="get">
+      <img src="/assets/icon.png" alt="" width="84" height="84">
+      <h2>Get Quill</h2>
+      <p>Free, open source, and it keeps itself up to date</p>
+      <div class="actions">
+        <a class="btn btn-primary" href="https://github.com/NuzProjects/Quill/releases/latest/download/Quill.ipa"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" aria-hidden="true" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M12 3.25a.75.75 0 0 1 .75.75v14.19l4.72-4.72a.75.75 0 1 1 1.06 1.06l-6 6a.75.75 0 0 1-1.06 0l-6-6a.75.75 0 1 1 1.06-1.06l4.72 4.72V4a.75.75 0 0 1 .75-.75" clip-rule="evenodd"/></svg>Download</a>
+        <a class="btn btn-secondary" href="/">Back to home</a>
+      </div>
+    </div>
+
+    <footer>
+      <p>An unofficial fork of <a href="https://github.com/claration/feather">Feather by Samara</a>, licensed under GPL-3.0. Not affiliated with the original developer or Apple Inc.</p>
+      <nav>
+        <a href="https://github.com/NuzProjects/Quill">GitHub</a>
+        <a href="https://github.com/NuzProjects/Quill/releases">Releases</a>
+        <a href="https://github.com/NuzProjects/Quill/issues/new/choose">Report an Issue</a>
+      </nav>
+    </footer>
+  </div>
+</main>
+
+<script>
+(() => {
+  const els = document.querySelectorAll(".reveal");
+  if (!("IntersectionObserver" in window)) { els.forEach(e => e.classList.add("in")); return; }
+  const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }), { threshold: 0.12 });
+  els.forEach(e => io.observe(e));
+  document.addEventListener("dragstart", e => { if (e.target instanceof HTMLImageElement) e.preventDefault(); });
+})();
+</script>
+</body>
+</html>
