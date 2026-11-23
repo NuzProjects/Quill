@@ -8,6 +8,11 @@ on:
         type: choice
         options: [iPad, iPhone, both]
         default: iPad
+      runner:
+        description: macOS runner label (try another when one pool has no capacity)
+        type: choice
+        options: [macos-26, macos-15, macos-26-intel]
+        default: macos-26
 
 permissions:
   contents: write
@@ -18,7 +23,7 @@ concurrency:
 
 jobs:
   screenshots:
-    runs-on: macos-26
+    runs-on: ${{ inputs.runner || 'macos-26' }}
     timeout-minutes: 45
     env:
       HOMEBREW_NO_AUTO_UPDATE: 1
@@ -31,7 +36,11 @@ jobs:
       - name: Apply Zsign patches
         run: for patch in patches/zsign-*.patch; do git -C Zsign apply "../$patch"; done
       - name: Select Xcode
-        run: sudo xcode-select -s /Applications/Xcode_26.3.app/Contents/Developer
+        run: |
+          # Prefer Xcode 26.3; otherwise the newest Xcode 26 on this image.
+          x=/Applications/Xcode_26.3.app
+          [ -d "$x" ] || x=$(ls -d /Applications/Xcode_26*.app | sort -V | tail -1)
+          echo "Using $x"; sudo xcode-select -s "$x/Contents/Developer"
       - name: Install AXe
         run: brew install cameroncooke/axe/axe
       - uses: actions/cache/restore@v4
@@ -50,7 +59,7 @@ jobs:
           xcodebuild -workspace Quill.xcworkspace -scheme Quill -configuration Release \
             -destination 'generic/platform=iOS Simulator' -derivedDataPath "$RUNNER_TEMP/Quill" \
             -skipPackagePluginValidation -skipMacroValidation \
-            ARCHS=arm64 ONLY_ACTIVE_ARCH=NO \
+            ARCHS=$(uname -m) ONLY_ACTIVE_ARCH=NO \
             CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM= PROVISIONING_PROFILE_SPECIFIER= \
             QUILL_PRODUCT_BUNDLE_IDENTIFIER=dev.madebynuz.dev.feather \
             COMPILER_INDEX_STORE_ENABLE=NO DEBUG_INFORMATION_FORMAT=dwarf 2>&1 | tee "$RUNNER_TEMP/build.log" | grep -E "error:|warning: .*deprecated|BUILD (SUCCEEDED|FAILED)" || true
