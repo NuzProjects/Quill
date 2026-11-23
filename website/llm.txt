@@ -1,0 +1,42 @@
+# Quill
+
+> Quill is a free, open-source iOS and iPadOS app that signs and installs IPA files directly on the device, with no computer and no jailbreak. It updates itself. Quill is an unofficial fork of Feather by Samara, maintained by NuzFlameV2, and is licensed under GPL-3.0.
+
+Quill uses a developer certificate (a .p12 plus a .mobileprovision), so signed apps last as long as the certificate does. This differs from AltStore and SideStore, which use a free Apple ID and refresh apps every 7 days. Quill still reads AltStore sources. It runs on stock iOS and iPadOS 16 or later.
+
+Quill is not the original Feather app and is not made or supported by its developer. Report problems with this version to the Quill repository, not to the original project. The site's FAQ says Quill collects no data: no tracking or analytics, and crash logs stay on the device unless the user chooses to share them.
+
+## Get Quill
+
+- [Download the latest IPA](https://github.com/NuzProjects/Quill/releases/latest/download/Feather.ipa): the current release, to be signed once with your own certificate
+- [Add the AltStore source](https://altdirect.app/?url=https://raw.githubusercontent.com/NuzProjects/Quill/refs/heads/main/source.json&old=true): installs Quill through an AltStore-compatible client
+- [All releases](https://github.com/NuzProjects/Quill/releases): version history and release notes
+
+## How it works
+
+1. Get a certificate: use an Apple Developer account, or a provider listed in Quill.
+2. Import it: add the .p12 and .mobileprovision in Settings → Certificates.
+3. Sign and install: pick an app from a source or import an IPA, then tap Sign.
+
+After the first install, Quill updates itself from Settings → Updates. Beta updates can be turned on there.
+
+## Features
+
+- Updates itself: new versions download, sign and install from Settings
+- Certificate overview: days left, capabilities, devices and signed apps, with alerts before a certificate expires or is revoked
+- Live progress: signing, downloads and imports show in a floating panel that can be cancelled
+- Sources: browse AltStore sources, preview them before adding, or install straight from GitHub releases
+- Signing options: change names, icons and bundle IDs, add Files support, inject tweaks and patch for Liquid Glass
+- Backup and transfer: back up apps, certificates, sources and settings, and restore them on another device
+- Languages: English plus 13 full translations
+
+## Links
+
+- [Website](https://quill.madebynuz.dev/): overview, FAQ and download
+- [Source code and issues](https://github.com/NuzProjects/Quill): GPL-3.0 repository
+- [Report an issue](https://github.com/NuzProjects/Quill/issues/new/choose)
+- [Original project: Feather by Samara](https://github.com/claration/feather): the app Quill is forked from
+
+## Optional
+
+- [Sitemap](https://quill.madebynuz.dev/sitemap.xml)

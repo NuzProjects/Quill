@@ -2,3 +2,6 @@ User-agent: *
 Allow: /
 
 Sitemap: https://quill.madebynuz.dev/sitemap.xml
+
+# Plain-text summary for AI crawlers and assistants
+# https://quill.madebynuz.dev/llms.txt
