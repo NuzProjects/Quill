@@ -1,5 +1,6 @@
 import SwiftUI
 import UIKit
+import NukeUI
 
 struct TabbarView: View {
 	@Environment(\.horizontalSizeClass) private var horizontalSizeClass
@@ -14,6 +15,38 @@ struct TabbarView: View {
 	@State private var acceptedPrompt = false
 	@State private var showWhatsNew = false
 	@State private var showOnboarding = false
+	@ObservedObject private var githubSources = GitHubSources.shared
+	@ObservedObject private var sourcesViewModel = SourcesViewModel.shared
+	@State private var _sidebarExtra: SidebarItem?
+	@State private var _isAddingSource = false
+	@FetchRequest(
+		entity: AltSource.entity(),
+		sortDescriptors: [NSSortDescriptor(keyPath: \AltSource.name, ascending: true)],
+		animation: .snappy
+	) private var _sources: FetchedResults<AltSource>
+
+	/// What the iPad sidebar has selected: one of the main tabs, or a source row under Sources.
+	enum SidebarItem: Hashable {
+		case tab(TabEnum)
+		case allSources
+		case source(String)
+		case github(String)
+	}
+
+	private var _sidebarSelection: Binding<SidebarItem> {
+		Binding(
+			get: { _sidebarExtra ?? .tab(selected) },
+			set: { new in
+				if new != (_sidebarExtra ?? .tab(selected)) { TabTransition.crossfade() }
+				if case .tab(let tab) = new {
+					_sidebarExtra = nil
+					selected = tab
+				} else {
+					_sidebarExtra = new
+				}
+			}
+		)
+	}
 
 	private var _selection: Binding<TabEnum> {
 		Binding(
@@ -34,7 +67,8 @@ struct TabbarView: View {
 		return UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular
 	}
 
-	var body: some View {
+	@ViewBuilder
+	private var _classicTabView: some View {
 		TabView(selection: _selection) {
 			ForEach(navigator.tabs, id: \.self) { tab in
 				TabEnum.view(for: tab)
@@ -44,6 +78,23 @@ struct TabbarView: View {
 					.tag(tab)
 			}
 		}
+	}
+
+	@ViewBuilder
+	private var _tabView: some View {
+		if #available(iOS 18, *) {
+			if UIDevice.current.userInterfaceIdiom == .pad {
+				_sidebarTabView
+			} else {
+				_classicTabView
+			}
+		} else {
+			_classicTabView
+		}
+	}
+
+	var body: some View {
+		_tabView
 		.symbolVariant(.fill)
 		.background(TabLabelApplier(tabs: navigator.tabs, showLabels: navigator.showLabels))
 		.overlay(alignment: .bottom) {
@@ -71,17 +122,20 @@ struct TabbarView: View {
 		.onChange(of: router.openLibrary) { open in
 			guard open else { return }
 			router.openLibrary = false
+			_sidebarExtra = nil
 			if navigator.tabs.contains(.library), selected != .library {
 				TabTransition.crossfade()
 				selected = .library
 			}
 		}
 		.onChange(of: router.openApp?.id) { id in
+			if id != nil { _sidebarExtra = nil }
 			guard id != nil, navigator.tabs.contains(.library), selected != .library else { return }
 			TabTransition.crossfade()
 			selected = .library
 		}
 		.onChange(of: router.signApp?.id) { id in
+			if id != nil { _sidebarExtra = nil }
 			guard id != nil, navigator.tabs.contains(.library), selected != .library else { return }
 			TabTransition.crossfade()
 			selected = .library
@@ -156,6 +210,7 @@ struct TabbarView: View {
 
 private extension TabbarView {
 	func _installPromptedUpdate() {
+		_sidebarExtra = nil
 		if navigator.tabs.contains(.settings) {
 			if selected != .settings { TabTransition.crossfade() }
 			selected = .settings
@@ -164,6 +219,129 @@ private extension TabbarView {
 			installingFromPrompt = true
 		}
 		updater.install()
+	}
+}
+
+@available(iOS 18, *)
+private extension TabbarView {
+	/// iPad: the original Feather sidebar, plus Quill's GitHub sources, Library update badge and Navigator tabs.
+	var _sidebarTabView: some View {
+		TabView(selection: _sidebarSelection) {
+			ForEach(navigator.tabs, id: \.self) { tab in
+				Tab(tab.title, systemImage: tab.icon, value: SidebarItem.tab(tab)) {
+					TabEnum.view(for: tab)
+						.environment(\.managedObjectContext, Storage.shared.context)
+				}
+				.badge(tab == .library ? _libraryUpdateCount : 0)
+			}
+
+			TabSection(String.localized("Sources")) {
+				Tab(String.localized("All Repositories"), systemImage: "globe.desk", value: SidebarItem.allSources) {
+					NavigationStack {
+						SourceAppsView(object: Array(_sources), viewModel: sourcesViewModel)
+					}
+				}
+
+				ForEach(githubSources.repositories) { repository in
+					Tab(value: SidebarItem.github(repository.slug)) {
+						NavigationStack {
+							GitHubImportView(repository: repository)
+						}
+					} label: {
+						_sidebarLabel(repository.name, iconURL: repository.avatarURL, fallback: Image("GitHubMark").renderingMode(.template))
+					}
+					.swipeActions {
+						Button(.localized("Delete"), systemImage: "trash", role: .destructive) {
+							if _sidebarExtra == .github(repository.slug) { _sidebarExtra = nil }
+							githubSources.remove(repository)
+						}
+					}
+				}
+
+				ForEach(_sources, id: \.objectID) { source in
+					Tab(value: SidebarItem.source(source.objectID.uriRepresentation().absoluteString)) {
+						NavigationStack {
+							SourceAppsView(object: [source], viewModel: sourcesViewModel)
+						}
+					} label: {
+						_sidebarLabel(source.name ?? .localized("Unknown"), iconURL: source.iconURL, fallback: Image(systemName: "app.dashed"))
+					}
+					.swipeActions {
+						Button(.localized("Delete"), systemImage: "trash", role: .destructive) {
+							_sidebarExtra = nil
+							Storage.shared.deleteSource(for: source)
+						}
+					}
+				}
+			}
+			.sectionActions {
+				Button(.localized("Add Source"), systemImage: "plus") {
+					_isAddingSource = true
+				}
+			}
+			.defaultVisibility(.hidden, for: .tabBar)
+			.hidden(horizontalSizeClass == .compact)
+		}
+		.tabViewStyle(.sidebarAdaptable)
+		.background(SidebarOpener(open: horizontalSizeClass == .regular))
+		.onChange(of: horizontalSizeClass) { size in
+			if size == .compact { _sidebarExtra = nil }
+		}
+		.task(id: Array(_sources)) {
+			await sourcesViewModel.fetchSources(_sources)
+		}
+		.task {
+			await githubSources.refreshDates()
+		}
+		.sheet(isPresented: $_isAddingSource) {
+			SourcesAddView()
+				.presentationDetents([.medium])
+		}
+	}
+
+	func _sidebarLabel(_ title: String, iconURL: URL?, fallback: Image) -> some View {
+		Label {
+			Text(title)
+		} icon: {
+			if let iconURL {
+				LazyImage(url: iconURL) { state in
+					if let image = state.image { image } else { fallback }
+				}
+				.processors([.resize(width: 14), .circle()])
+			} else {
+				fallback
+			}
+		}
+	}
+}
+
+/// Opens the iPad sidebar the first time Quill shows it at full width, instead of leaving it collapsed into the top bar.
+/// After that the person's own choice (hiding it with the sidebar button) is left alone.
+@available(iOS 18, *)
+private struct SidebarOpener: UIViewControllerRepresentable {
+	let open: Bool
+	func makeUIViewController(context: Context) -> Opener { Opener() }
+	func updateUIViewController(_ controller: Opener, context: Context) {
+		controller.wantsOpen = open
+		DispatchQueue.main.async { controller.openIfNeeded() }
+	}
+	final class Opener: UIViewController {
+		var wantsOpen = false
+		private var opened = false
+		override func viewDidAppear(_ animated: Bool) { super.viewDidAppear(animated); openIfNeeded() }
+		func openIfNeeded() {
+			guard wantsOpen, !opened, let root = view.window?.rootViewController, let tabs = root.firstTabBarController else { return }
+			opened = true
+			tabs.sidebar.isHidden = false
+		}
+	}
+}
+
+private extension UIViewController {
+	var firstTabBarController: UITabBarController? {
+		if let tabs = self as? UITabBarController { return tabs }
+		for child in children { if let tabs = child.firstTabBarController { return tabs } }
+		return presentedViewController?.firstTabBarController
 	}
 }
 
