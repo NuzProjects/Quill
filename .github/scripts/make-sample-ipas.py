@@ -3,6 +3,8 @@
 import io, plistlib, struct, sys, zipfile, zlib
 from pathlib import Path
 
+ICONS = Path(__file__).resolve().parent / "sample-icons"
+
 APPS = [
     ("Tempo", "1.4.2", (91, 133, 240), (52, 84, 200)),
     ("Pixel Cam", "3.0", (240, 96, 120), (190, 50, 90)),
@@ -48,8 +50,9 @@ def main(out):
             root = f"Payload/{slug}.app/"
             z.writestr(root + "Info.plist", plistlib.dumps(info, fmt=plistlib.FMT_BINARY))
             z.writestr(root + slug, b"")
-            z.writestr(root + "AppIcon60x60@2x.png", png(120, top, bottom))
-            z.writestr(root + "AppIcon60x60@3x.png", png(180, top, bottom))
+            for scale, px in (("2x", 120), ("3x", 180)):
+                drawn = ICONS / f"{slug}-{px}.png"
+                z.write(drawn, root + f"AppIcon60x60@{scale}.png") if drawn.exists() else z.writestr(root + f"AppIcon60x60@{scale}.png", png(px, top, bottom))
         print(slug)
 
 
