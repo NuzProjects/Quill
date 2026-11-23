@@ -2,9 +2,36 @@ import Foundation
 import UIKit
 
 enum AppCompatibility {
-	enum Issue: Equatable {
+	enum Issue: Equatable, Identifiable {
 		case encrypted
 		case needsNewerIOS(String)
+		case iPadOnly
+		case certificateExpired(String)
+		case certificateRevoked(String)
+		case certificateExpiresSoon(String, Date)
+		case appIDLimitReached(nextSlot: Date)
+		case appIDLimitClose(used: Int)
+		case lowStorage(neededMB: Int, freeMB: Int)
+
+		var id: String { message }
+
+		/// Blocking issues stop signing; the rest can be signed anyway.
+		var isBlocking: Bool {
+			switch self {
+			case .certificateExpired, .certificateRevoked, .appIDLimitReached, .lowStorage: true
+			default: false
+			}
+		}
+
+		var icon: String {
+			switch self {
+			case .encrypted: "lock.fill"
+			case .needsNewerIOS, .iPadOnly: "iphone.slash"
+			case .certificateExpired, .certificateRevoked, .certificateExpiresSoon: "checkmark.seal"
+			case .appIDLimitReached, .appIDLimitClose: "number"
+			case .lowStorage: "internaldrive"
+			}
+		}
 
 		var message: String {
 			switch self {
@@ -12,22 +39,74 @@ enum AppCompatibility {
 				return .localized("This app is still encrypted by the App Store, so it won't open after signing. Use a decrypted IPA instead.")
 			case .needsNewerIOS(let minimum):
 				return String(format: .localized("This app needs iOS %@ or later, but this device is on iOS %@, so it may not open."), minimum, UIDevice.current.systemVersion)
+			case .iPadOnly:
+				return .localized("This app is made for iPad only, so it may not open or may look wrong on iPhone.")
+			case .certificateExpired(let name):
+				return String(format: .localized("%@ has expired. Pick or import another certificate."), name)
+			case .certificateRevoked(let name):
+				return String(format: .localized("Apple revoked %@, so apps signed with it won't open. Pick or import another certificate."), name)
+			case .certificateExpiresSoon(let name, let date):
+				return String(format: .localized("%@ expires %@, so this app will stop opening soon after."), name, date.formatted(.relative(presentation: .named)))
+			case .appIDLimitReached(let next):
+				return String(format: .localized("This Apple ID has used all %ld new App IDs Apple allows per week. The next one frees up %@. Re-signing an app you already signed doesn't count."), AppIDUsage.weeklyLimit, next.formatted(.relative(presentation: .named)))
+			case .appIDLimitClose(let used):
+				return String(format: .localized("This Apple ID has used %ld of %ld new App IDs for this week. Signing this app uses one more."), used, AppIDUsage.weeklyLimit)
+			case .lowStorage(let needed, let free):
+				return String(format: .localized("Signing needs about %ld MB of free space, but only %ld MB is free. Free up some space first."), needed, free)
 			}
 		}
 	}
 
+	/// The checks that only need the app (used before the signing screen knows the certificate).
 	static func issues(for app: AppInfoPresentable) -> [Issue] {
-		guard
-			let bundle = Storage.shared.getAppDirectory(for: app),
-			let info = NSDictionary(contentsOf: bundle.appendingPathComponent("Info.plist")) as? [String: Any]
-		else { return [] }
+		issues(for: app, certificate: nil, identifier: nil, appMegabytes: nil)
+	}
 
+	/// Everything worth knowing before signing: the app, the device, the certificate and the Apple ID's App ID budget.
+	static func issues(for app: AppInfoPresentable, certificate: CertificatePair?, identifier: String?, appMegabytes: Double?) -> [Issue] {
 		var result: [Issue] = []
-		if let executable = info["CFBundleExecutable"] as? String, isEncrypted(bundle.appendingPathComponent(executable)) {
-			result.append(.encrypted)
+		let bundle = Storage.shared.getAppDirectory(for: app)
+		if let bundle, let info = NSDictionary(contentsOf: bundle.appendingPathComponent("Info.plist")) as? [String: Any] {
+			if let executable = info["CFBundleExecutable"] as? String, isEncrypted(bundle.appendingPathComponent(executable)) {
+				result.append(.encrypted)
+			}
+			if let minimum = info["MinimumOSVersion"] as? String, isVersion(minimum, newerThan: UIDevice.current.systemVersion) {
+				result.append(.needsNewerIOS(minimum))
+			}
+			if UIDevice.current.userInterfaceIdiom == .phone, let families = info["UIDeviceFamily"] as? [Int], !families.isEmpty, !families.contains(1) {
+				result.append(.iPadOnly)
+			}
 		}
-		if let minimum = info["MinimumOSVersion"] as? String, isVersion(minimum, newerThan: UIDevice.current.systemVersion) {
-			result.append(.needsNewerIOS(minimum))
+
+		if let certificate {
+			let name = certificate.nickname ?? .localized("This certificate")
+			if certificate.revoked {
+				result.append(.certificateRevoked(name))
+			} else if let expiration = certificate.expiration {
+				if expiration <= Date() { result.append(.certificateExpired(name)) }
+				else if expiration.timeIntervalSinceNow < 2 * 86400 { result.append(.certificateExpiresSoon(name, expiration)) }
+			}
+			if let marker = AppleIDAccount.marker(for: certificate), let identifier, !identifier.isEmpty {
+				let suffix = "." + marker.teamID
+				let full = identifier.hasSuffix(suffix) ? identifier : identifier + suffix
+				if !AppIDUsage.isKnown(full, teamID: marker.teamID) {
+					let recent = AppIDUsage.recent(teamID: marker.teamID)
+					if recent.count >= AppIDUsage.weeklyLimit, let oldest = recent.first {
+						result.append(.appIDLimitReached(nextSlot: oldest.addingTimeInterval(7 * 86400)))
+					} else if recent.count >= AppIDUsage.weeklyLimit - 3 {
+						result.append(.appIDLimitClose(used: recent.count))
+					}
+				}
+			}
+		}
+
+		if let appMB = appMegabytes ?? bundle.map(SigningProgress.megabytes) {
+			let neededMB = Int(appMB * 2.2) + 50
+			let home = URL(fileURLWithPath: NSHomeDirectory())
+			if let free = try? home.resourceValues(forKeys: [.volumeAvailableCapacityForImportantUsageKey]).volumeAvailableCapacityForImportantUsage {
+				let freeMB = Int(free / 1_048_576)
+				if freeMB < neededMB { result.append(.lowStorage(neededMB: neededMB, freeMB: freeMB)) }
+			}
 		}
 		return result
 	}

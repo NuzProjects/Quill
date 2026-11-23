@@ -3,6 +3,7 @@ import Nuke
 import IDeviceSwift
 import OSLog
 import UserNotifications
+import CoreSpotlight
 
 @main
 struct QuillApp: App {
@@ -21,6 +22,11 @@ struct QuillApp: App {
 					.modifier(_UpdateCertificateSheet())
 					.environment(\.managedObjectContext, storage.context)
 					.onOpenURL(perform: _handleURL)
+					.onContinueUserActivity(CSSearchableItemActionType) { activity in
+						if let app = SpotlightIndexer.app(for: activity) {
+							NotificationRouter.shared.openApp = AnyApp(base: app)
+						}
+					}
 					.transition(.move(edge: .top).combined(with: .opacity))
 			}
 			.onReceive(NotificationCenter.default.publisher(for: .heartbeatInvalidHost)) { _ in

@@ -12,6 +12,8 @@ struct SigningView: View {
 	@State private var _isFilePickerPresenting = false
 	@State private var _isImagePickerPresenting = false
 	@State private var _isSigning = false
+	@State private var _checkIssues: [AppCompatibility.Issue]?
+	@State private var _appMegabytes: Double?
 
 	@State private var _selectedPhoto: PhotosPickerItem? = nil
 	@State var appIcon: UIImage?
@@ -44,6 +46,7 @@ struct SigningView: View {
 			Form {
 				_customizationOptions(for: app)
 				_cert()
+				_preSignCheck()
 				_customizationProperties(for: app)
 
 				Rectangle()
@@ -116,6 +119,7 @@ struct SigningView: View {
 
 			.animation(.smooth, value: _isSigning)
 		}
+		.task(id: _checkKey) { await _runCheck() }
 		.onAppear {
 			if
 				_optionsManager.options.ppqProtection,
@@ -182,6 +186,14 @@ extension SigningView {
 					bindingValue: $_temporaryOptions.appVersion
 				)
 			}
+			Picker(selection: $_temporaryOptions.appCategory) {
+				Text(.localized("Automatic")).tag(Options.AppCategory?.none)
+				ForEach(Options.AppCategory.allCases) { category in
+					Text(category.localizedDescription).tag(Options.AppCategory?.some(category))
+				}
+			} label: {
+				Text(.localized("App Library Folder"))
+			}
 		}
 	}
 
@@ -201,6 +213,34 @@ extension SigningView {
 					.font(.footnote)
 					.foregroundColor(.disabled())
 			}
+		}
+	}
+
+	@ViewBuilder
+	private func _preSignCheck() -> some View {
+		Section {
+			if let issues = _checkIssues {
+				if issues.isEmpty {
+					Label(String.localized("Ready to sign"), systemImage: "checkmark.circle.fill")
+						.foregroundStyle(.green)
+				} else {
+					ForEach(issues) { issue in
+						Label {
+							Text(issue.message).font(.footnote)
+						} icon: {
+							Image(systemName: issue.icon)
+								.foregroundStyle(issue.isBlocking ? Color.red : Color.orange)
+						}
+					}
+				}
+			} else {
+				HStack(spacing: 8) {
+					ProgressView()
+					Text(.localized("Checking…")).font(.footnote).foregroundStyle(.secondary)
+				}
+			}
+		} header: {
+			Text(.localized("Pre-sign Check"))
 		}
 	}
 
@@ -264,6 +304,34 @@ extension SigningView {
 		_temporaryOptions.appVersion = nil
 		if let old = GitHubReleases.shared.allApps().first(where: { $0.uuid == replacementUUID }), let cert = Storage.shared.getCertificate(from: old), let index = certificates.firstIndex(where: { $0.objectID == cert.objectID }) { _temporaryCertificate = index }
 	}
+	private var _checkKey: String {
+		"\(_temporaryCertificate)|\(_temporaryOptions.appIdentifier ?? "")|\(_temporaryOptions.signingOption)"
+	}
+
+	private var _effectiveIdentifier: String? {
+		_temporaryOptions.appIdentifier ?? app.identifier
+	}
+
+	private func _currentIssues() -> [AppCompatibility.Issue] {
+		AppCompatibility.issues(
+			for: app,
+			certificate: _temporaryOptions.signingOption == .default ? _selectedCert() : nil,
+			identifier: _effectiveIdentifier,
+			appMegabytes: _appMegabytes
+		)
+	}
+
+	private func _runCheck() async {
+		if _appMegabytes == nil {
+			let directory = Storage.shared.getAppDirectory(for: app)
+			_appMegabytes = await Task.detached(priority: .userInitiated) {
+				directory.map(SigningProgress.megabytes) ?? 0
+			}.value
+		}
+		let issues = _currentIssues()
+		withAnimation(.snappy) { _checkIssues = issues }
+	}
+
 	private func _start() {
 		guard
 			_selectedCert() != nil || _temporaryOptions.signingOption != .default
@@ -276,7 +344,15 @@ extension SigningView {
 			return
 		}
 
-		let issues = AppCompatibility.issues(for: app)
+		let issues = _currentIssues()
+		if let blocking = issues.first(where: \.isBlocking) {
+			UINotificationFeedbackGenerator().notificationOccurred(.error)
+			UIAlertController.showAlertWithOk(
+				title: .localized("Can't Sign Yet"),
+				message: blocking.message
+			)
+			return
+		}
 		guard issues.isEmpty else {
 			UIAlertController.showAlert(
 				title: .localized("This App May Not Work"),

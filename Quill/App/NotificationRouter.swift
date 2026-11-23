@@ -12,6 +12,8 @@ final class NotificationRouter: ObservableObject {
 	@Published var openLibrary = false
 	/// An app a Shortcut asked to sign; the Library opens its signing screen and clears this.
 	@Published var signApp: AnyApp?
+	/// An app picked from Spotlight; the Library shows its details and clears this.
+	@Published var openApp: AnyApp?
 
 	private init() {}
 

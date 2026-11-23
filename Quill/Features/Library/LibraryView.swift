@@ -295,6 +295,11 @@ struct LibraryView: View {
 			.onReceive(NotificationCenter.default.publisher(for: Notification.Name("Quill.signApp"))) { notification in
 				_selectedSigningAppPresenting = notification.object as? AnyApp
 			}
+			.onReceive(NotificationRouter.shared.$openApp) { app in
+				guard let app else { return }
+				_selectedInfoAppPresenting = app
+				DispatchQueue.main.async { NotificationRouter.shared.openApp = nil }
+			}
 			.onReceive(NotificationRouter.shared.$signApp) { app in
 				guard let app else { return }
 				_selectedSigningAppPresenting = app

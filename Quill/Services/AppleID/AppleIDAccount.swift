@@ -243,7 +243,8 @@ enum AppleIDAccount {
 
 		let deviceName = await MainActor.run { UIDevice.current.name }
 		try? await services.registerDevice(udid: record.udid, name: deviceName)
-		let bundleID = try await services.bundleID(identifier, name: String(name.prefix(60)))
+		let (bundleID, created) = try await services.bundleID(identifier, name: String(name.prefix(60)))
+		AppIDUsage.record(identifier, teamID: record.teamID, created: created)
 		guard let certificate = try await services.certificates().first(where: { $0.serialNumber == record.serialNumber }) else {
 			await MainActor.run {
 				cert.revoked = true
@@ -254,6 +255,33 @@ enum AppleIDAccount {
 		let devices = try await services.deviceIDs()
 		let profile = try await services.profile(bundleID: bundleID, certificateID: certificate.id, deviceIDs: devices)
 		return Provisioned(bundleIdentifier: identifier, profile: profile)
+	}
+}
+
+/// Free Apple IDs can register 10 new App IDs per rolling 7 days. Quill can't ask Apple
+/// how many are left, so it counts the ones it registered itself.
+enum AppIDUsage {
+	static let weeklyLimit = 10
+	private static func _key(_ teamID: String) -> String { "Quill.appIDUsage.\(teamID)" }
+
+	static func record(_ identifier: String, teamID: String, created: Bool) {
+		var log = _log(teamID)
+		if created { log[identifier] = Date().timeIntervalSince1970 }
+		else if log[identifier] == nil { log[identifier] = 0 }
+		UserDefaults.standard.set(log, forKey: _key(teamID))
+	}
+
+	/// Whether this identifier is already registered, so signing it again costs nothing.
+	static func isKnown(_ identifier: String, teamID: String) -> Bool { _log(teamID)[identifier] != nil }
+
+	/// App IDs created in the last 7 days, oldest first.
+	static func recent(teamID: String) -> [Date] {
+		let cutoff = Date().addingTimeInterval(-7 * 86400).timeIntervalSince1970
+		return _log(teamID).values.filter { $0 > cutoff }.sorted().map { Date(timeIntervalSince1970: $0) }
+	}
+
+	private static func _log(_ teamID: String) -> [String: Double] {
+		UserDefaults.standard.dictionary(forKey: _key(teamID)) as? [String: Double] ?? [:]
 	}
 }
 
