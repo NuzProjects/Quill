@@ -1,4 +1,4 @@
-## Update 1.3.8 Beta 3
+## Update 1.3.8 Beta 4
 
 **New:**
 * Tap the certificate expiry reminder to jump straight to the apps signed with it, so you know what to re-sign
