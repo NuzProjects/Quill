@@ -31,17 +31,50 @@
   "screenshot": "https://quill.madebynuz.dev/assets/screenshot.png",
   "downloadUrl": "https://github.com/NuzProjects/Quill/releases/latest",
   "license": "https://www.gnu.org/licenses/gpl-3.0.html",
-  "author": { "@type": "Person", "name": "NuzFlameV2", "url": "https://github.com/NuzProjects" },
-  "alternateName": ["Quill IPA Signer", "Quill iOS"],
+  "author": {
+    "@type": "Organization",
+    "name": "NuzProjects",
+    "url": "https://github.com/NuzProjects",
+    "founder": {
+      "@type": "Person",
+      "name": "NuzFlameV2"
+    }
+  },
+  "alternateName": [
+    "Quill IPA Signer",
+    "Quill iOS",
+    "Quill by NuzProjects"
+  ],
   "keywords": "IPA signer, IPA installer, sideload iPhone, sideload iPad, on-device app signing, install IPA without computer, AltStore source, no jailbreak",
   "featureList": "Sign IPA files on device, Install apps without a computer, AltStore sources, Tweak and dylib injection, Certificate overview and revocation check, Self-updating, Backup and transfer",
-  "sameAs": ["https://github.com/NuzProjects/Quill"],
+  "sameAs": [
+    "https://github.com/NuzProjects/Quill",
+    "https://github.com/NuzProjects"
+  ],
   "isAccessibleForFree": true,
   "inLanguage": "en",
   "softwareRequirements": "iOS 16 or later, or iPadOS 16 or later, and either a signing certificate (.p12 and .mobileprovision) or a free Apple ID",
-  "isBasedOn": { "@type": "SoftwareApplication", "name": "Feather", "url": "https://github.com/claration/feather" },
+  "isBasedOn": {
+    "@type": "SoftwareApplication",
+    "name": "Feather",
+    "url": "https://github.com/claration/feather"
+  },
   "codeRepository": "https://github.com/NuzProjects/Quill",
-  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "NuzProjects",
+    "url": "https://github.com/NuzProjects",
+    "founder": {
+      "@type": "Person",
+      "name": "NuzFlameV2"
+    }
+  },
+  "applicationSubCategory": "IPA signer and installer"
 }
 </script>
 <script type="application/ld+json">
@@ -119,6 +152,22 @@
           "acceptedAnswer": {
             "@type": "Answer",
             "text": "No. This is an unofficial fork made by NuzFlameV2, building on Feather by Samara. It isn't made or supported by the original developer, so please report problems with this version here, not to the original project. Both are licensed under GPL-3.0."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How does Quill handle my certificate and Apple ID?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Certificates and Apple ID credentials stay on your device, in the iOS Keychain. Your Apple ID password goes only to Apple, never to a Quill server. Quill is open source, so you can read the code on GitHub."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is this the Quill iOS app or other software called Quill?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "This is Quill, the free iOS and iPadOS IPA signer by NuzProjects (NuzFlameV2). It is not related to other software that shares the name."
           }
         }
       ]
@@ -437,6 +486,7 @@ footer a:hover { color: var(--text); }
     <h2 class="title reveal">How does Quill compare?</h2>
     <p class="sub reveal">See Quill side by side with Feather, AltStore, SideStore, Sideloadly and ESign.</p>
     <div class="actions reveal" style="animation:none"><a class="btn btn-secondary" href="/compare">Compare Quill</a></div>
+    <p class="sub reveal" style="font-size:16px"><a href="/compare/feather">Quill vs Feather</a> &middot; <a href="/compare/esign">Quill vs ESign</a></p>
   </section>
 
   <section id="faq" class="block wrap">
@@ -449,6 +499,8 @@ footer a:hover { color: var(--text); }
       <div class="qa reveal" style="--d:0.2s"><button aria-expanded="false">Was this made with AI?<span class="plus" aria-hidden="true"></span></button><div class="answer"><div><p>Yes. While the original repository was fully hand crafted, AI was partially used in this fork to speed up development.</p></div></div></div>
       <div class="qa reveal" style="--d:0.25s"><button aria-expanded="false">Does Quill collect any data?<span class="plus" aria-hidden="true"></span></button><div class="answer"><div><p>No. There's no tracking or analytics. Crash logs stay on your device unless you choose to share them.</p></div></div></div>
       <div class="qa reveal" style="--d:0.3s"><button aria-expanded="false">Is this the official Quill?<span class="plus" aria-hidden="true"></span></button><div class="answer"><div><p>No. This is an unofficial fork made by NuzFlameV2, building on <a href="https://github.com/claration/feather">Feather by Samara</a>. It isn't made or supported by the original developer, so please report problems with this version here, not to the original project. Both are licensed under GPL-3.0.</p></div></div></div>
+      <div class="qa reveal" style="--d:0.35s"><button aria-expanded="false">How does Quill handle my certificate and Apple ID?<span class="plus" aria-hidden="true"></span></button><div class="answer"><div><p>Certificates and Apple ID credentials stay on your device, in the iOS Keychain. Your Apple ID password goes only to Apple, never to a Quill server. Quill is open source, so you can read the code on GitHub.</p></div></div></div>
+      <div class="qa reveal" style="--d:0.4s"><button aria-expanded="false">Is this the Quill iOS app or other software called Quill?<span class="plus" aria-hidden="true"></span></button><div class="answer"><div><p>This is Quill, the free iOS and iPadOS IPA signer by NuzProjects (NuzFlameV2). It is not related to other software that shares the name.</p></div></div></div>
     </div>
   </section>
 
