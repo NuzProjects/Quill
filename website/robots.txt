@@ -1,4 +1,25 @@
+# Quill: https://quill.madebynuz.dev/
+# Everyone, including AI search and answer engines, is welcome to crawl and cite this site.
+
 User-agent: *
+Allow: /
+
+User-agent: GPTBot
+User-agent: OAI-SearchBot
+User-agent: ChatGPT-User
+User-agent: ClaudeBot
+User-agent: Claude-SearchBot
+User-agent: Claude-User
+User-agent: PerplexityBot
+User-agent: Perplexity-User
+User-agent: Google-Extended
+User-agent: Applebot
+User-agent: Applebot-Extended
+User-agent: Googlebot
+User-agent: Bingbot
+User-agent: DuckAssistBot
+User-agent: Meta-ExternalAgent
+User-agent: CCBot
 Allow: /
 
 Sitemap: https://quill.madebynuz.dev/sitemap.xml

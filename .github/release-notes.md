@@ -1,4 +1,4 @@
-## Update 1.3.8 Beta 4
+## Update 1.3.9
 
 **New:**
 * Tap the certificate expiry reminder to jump straight to the apps signed with it, so you know what to re-sign
@@ -10,8 +10,6 @@
 * Quill now checks for revoked certificates in the background and sends a notification if one gets revoked
 * Library apps now show up in Spotlight. Tap a result to open the app in Quill
 * Siri and Shortcuts: sign your latest import, check for app updates, or ask how many days your certificate has left
-* Entitlements check: see which features the app asks for (iCloud, push notifications, App Groups and more) and which ones your certificate can't give it, before you sign
-* Tweak checker: tweaks are checked before they're injected, with a warning if one is built for the wrong architecture, needs a newer iOS, needs jailbreak-only libraries or is made for a different app
 
 **Changes:**
 * Changing numbers now roll smoothly instead of jumping: progress percentages, signing time left, certificate days left, section counts, the screenshot counter, Home Screen widgets and Live Activities

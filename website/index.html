@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Quill</title>
-<meta name="description" content="Free on-device iOS/iPadOS application manager/installer, using certificates part of the Apple Developer Program.">
+<title>Quill: Free IPA Signer and Installer for iPhone and iPad</title>
+<meta name="description" content="Quill is a free, open-source iOS and iPadOS app that signs and installs IPA files on your device with your own certificate. No computer, no jailbreak, and it updates itself. An AltStore and SideStore alternative.">
 <meta name="theme-color" content="#ffffff">
 <meta name="apple-mobile-web-app-title" content="Quill">
 <meta name="format-detection" content="telephone=no">
@@ -25,33 +25,169 @@
   "name": "Quill",
   "operatingSystem": "iOS 16, iPadOS 16",
   "applicationCategory": "UtilitiesApplication",
-  "description": "Free on-device iOS/iPadOS application manager/installer, using certificates part of the Apple Developer Program.",
+  "description": "Quill is a free, open-source iOS and iPadOS app that signs and installs IPA files on your device with your own certificate. No computer, no jailbreak, and it updates itself. An AltStore and SideStore alternative.",
   "url": "https://quill.madebynuz.dev/",
   "image": "https://quill.madebynuz.dev/assets/icon.png",
   "screenshot": "https://quill.madebynuz.dev/assets/screenshot.png",
   "downloadUrl": "https://github.com/NuzProjects/Quill/releases/latest",
   "license": "https://www.gnu.org/licenses/gpl-3.0.html",
-  "author": { "@type": "Person", "name": "NuzFlameV2", "url": "https://github.com/NuzProjects" },
-  "alternateName": ["Quill IPA Signer", "Quill iOS"],
+  "author": {
+    "@type": "Organization",
+    "name": "NuzProjects",
+    "url": "https://github.com/NuzProjects",
+    "founder": {
+      "@type": "Person",
+      "name": "NuzFlameV2"
+    }
+  },
+  "alternateName": [
+    "Quill IPA Signer",
+    "Quill iOS",
+    "Quill by NuzProjects"
+  ],
   "keywords": "IPA signer, IPA installer, sideload iPhone, sideload iPad, on-device app signing, install IPA without computer, AltStore source, no jailbreak",
   "featureList": "Sign IPA files on device, Install apps without a computer, AltStore sources, Tweak and dylib injection, Certificate overview and revocation check, Self-updating, Backup and transfer",
-  "sameAs": ["https://github.com/NuzProjects/Quill"],
-  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+  "sameAs": [
+    "https://github.com/NuzProjects/Quill",
+    "https://github.com/NuzProjects"
+  ],
+  "isAccessibleForFree": true,
+  "inLanguage": "en",
+  "softwareRequirements": "iOS 16 or later, or iPadOS 16 or later, and either a signing certificate (.p12 and .mobileprovision) or a free Apple ID",
+  "isBasedOn": {
+    "@type": "SoftwareApplication",
+    "name": "Feather",
+    "url": "https://github.com/claration/feather"
+  },
+  "codeRepository": "https://github.com/NuzProjects/Quill",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "NuzProjects",
+    "url": "https://github.com/NuzProjects",
+    "founder": {
+      "@type": "Person",
+      "name": "NuzFlameV2"
+    }
+  },
+  "applicationSubCategory": "IPA signer and installer"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": "https://quill.madebynuz.dev/#website",
+      "url": "https://quill.madebynuz.dev/",
+      "name": "Quill",
+      "description": "Quill is a free, open-source iOS and iPadOS app that signs and installs IPA files on your device with your own certificate. No computer, no jailbreak, and it updates itself. An AltStore and SideStore alternative.",
+      "inLanguage": "en",
+      "publisher": {
+        "@type": "Person",
+        "name": "NuzFlameV2",
+        "url": "https://github.com/NuzProjects"
+      }
+    },
+    {
+      "@type": "FAQPage",
+      "@id": "https://quill.madebynuz.dev/#faq",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is Quill?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Quill is a free, open-source app for iPhone and iPad that signs and installs IPA files directly on the device using your own certificate. It needs no computer and no jailbreak, and it updates itself. It is licensed under GPL-3.0."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Do I need a computer or a jailbreak?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. Quill runs on stock iOS and iPadOS 16 or later. You sign with your own developer certificate (a .p12 and a .mobileprovision) or with a free Apple ID."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How is it different from AltStore or SideStore?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "AltStore and SideStore use a free Apple ID and need a refresh every 7 days. With a developer certificate, Quill-signed apps last as long as the certificate does, usually up to a year. A free Apple ID also works when you have no certificate, with the same 7-day limit. Quill still reads AltStore sources."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How do I install Quill?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Download the IPA and sign it once with your certificate or free Apple ID, or add the AltStore source. After that, Quill updates itself from Settings → Updates."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Was this made with AI?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. While the original repository was fully hand crafted, AI was partially used in this fork to speed up development."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does Quill collect any data?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. There's no tracking or analytics. Crash logs stay on your device unless you choose to share them."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is this the official Quill?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. This is an unofficial fork made by NuzFlameV2, building on Feather by Samara. It isn't made or supported by the original developer, so please report problems with this version here, not to the original project. Both are licensed under GPL-3.0."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How does Quill handle my certificate and Apple ID?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Certificates and Apple ID credentials stay on your device, in the iOS Keychain. Your Apple ID password goes only to Apple, never to a Quill server. Quill is open source, so you can read the code on GitHub."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is this the Quill iOS app or other software called Quill?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "This is Quill, the free iOS and iPadOS IPA signer by NuzProjects (NuzFlameV2). It is not related to other software that shares the name."
+          }
+        }
+      ]
+    }
+  ]
 }
 </script>
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Quill">
 <meta property="og:url" content="https://quill.madebynuz.dev/">
-<meta property="og:title" content="Quill">
-<meta property="og:description" content="Free on-device iOS/iPadOS application manager/installer, using certificates part of the Apple Developer Program.">
+<meta property="og:title" content="Quill: Free IPA Signer and Installer for iPhone and iPad">
+<meta property="og:description" content="Quill is a free, open-source iOS and iPadOS app that signs and installs IPA files on your device with your own certificate. No computer, no jailbreak, and it updates itself. An AltStore and SideStore alternative.">
 <meta property="og:image" content="https://quill.madebynuz.dev/assets/banner.png">
 <meta property="og:image:type" content="image/png">
 <meta property="og:image:width" content="515">
 <meta property="og:image:height" content="214">
 <meta property="og:image:alt" content="Quill">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Quill">
-<meta name="twitter:description" content="Free on-device iOS/iPadOS application manager/installer, using certificates part of the Apple Developer Program.">
+<meta name="twitter:title" content="Quill: Free IPA Signer and Installer for iPhone and iPad">
+<meta name="twitter:description" content="Quill is a free, open-source iOS and iPadOS app that signs and installs IPA files on your device with your own certificate. No computer, no jailbreak, and it updates itself. An AltStore and SideStore alternative.">
 <meta name="twitter:image" content="https://quill.madebynuz.dev/assets/banner.png">
 <style>
 :root {
@@ -284,7 +420,8 @@ footer a:hover { color: var(--text); }
     <nav class="nav-links">
       <a class="optional" href="#features">Features</a>
       <a class="optional" href="#how">How It Works</a>
-      <a href="#faq">FAQ</a>
+      <a class="optional" href="#faq">FAQ</a>
+      <a href="/compare">Compare</a>
       <a class="cta-link" href="#get">Download</a>
     </nav>
   </div>
@@ -345,15 +482,25 @@ footer a:hover { color: var(--text); }
     </div>
   </section>
 
+  <section id="compare" class="block wrap">
+    <h2 class="title reveal">How does Quill compare?</h2>
+    <p class="sub reveal">See Quill side by side with Feather, AltStore, SideStore, Sideloadly and ESign.</p>
+    <div class="actions reveal" style="animation:none"><a class="btn btn-secondary" href="/compare">Compare Quill</a></div>
+    <p class="sub reveal" style="font-size:16px"><a href="/compare/feather">Quill vs Feather</a> &middot; <a href="/compare/esign">Quill vs ESign</a></p>
+  </section>
+
   <section id="faq" class="block wrap">
     <h2 class="title reveal">Questions, answered</h2>
     <div class="faq">
-      <div class="qa reveal"><button aria-expanded="false">Do I need a computer or a jailbreak?<span class="plus" aria-hidden="true"></span></button><div class="answer"><div><p>No. Quill runs on stock iOS and iPadOS 16 or later. All you need is a signing certificate.</p></div></div></div>
-      <div class="qa reveal" style="--d:0.05s"><button aria-expanded="false">How is it different from AltStore or SideStore?<span class="plus" aria-hidden="true"></span></button><div class="answer"><div><p>AltStore and SideStore use a free Apple ID and refresh apps every 7 days. Quill uses a developer certificate, so apps last as long as the certificate does. It still reads AltStore sources.</p></div></div></div>
-      <div class="qa reveal" style="--d:0.1s"><button aria-expanded="false">How do I install Quill?<span class="plus" aria-hidden="true"></span></button><div class="answer"><div><p>Download the IPA and sign it once with your certificate, or add the AltStore source. After that, Quill updates itself from Settings → Updates.</p></div></div></div>
-      <div class="qa reveal" style="--d:0.15s"><button aria-expanded="false">Was this made with AI?<span class="plus" aria-hidden="true"></span></button><div class="answer"><div><p>Yes. While the original repository was fully hand crafted, AI was partially used in this fork to speed up development.</p></div></div></div>
-      <div class="qa reveal" style="--d:0.2s"><button aria-expanded="false">Does Quill collect any data?<span class="plus" aria-hidden="true"></span></button><div class="answer"><div><p>No. There's no tracking or analytics. Crash logs stay on your device unless you choose to share them.</p></div></div></div>
-      <div class="qa reveal" style="--d:0.25s"><button aria-expanded="false">Is this the official Feather?<span class="plus" aria-hidden="true"></span></button><div class="answer"><div><p>No. This is an unofficial fork made by NuzFlameV2, building on <a href="https://github.com/claration/feather">Feather by Samara</a>. It isn't made or supported by the original developer, so please report problems with this version here, not to the original project. Both are licensed under GPL-3.0.</p></div></div></div>
+      <div class="qa reveal"><button aria-expanded="false">What is Quill?<span class="plus" aria-hidden="true"></span></button><div class="answer"><div><p>Quill is a free, open-source app for iPhone and iPad that signs and installs IPA files directly on the device using your own certificate. It needs no computer and no jailbreak, and it updates itself. It is licensed under GPL-3.0.</p></div></div></div>
+      <div class="qa reveal" style="--d:0.05s"><button aria-expanded="false">Do I need a computer or a jailbreak?<span class="plus" aria-hidden="true"></span></button><div class="answer"><div><p>No. Quill runs on stock iOS and iPadOS 16 or later. You sign with your own developer certificate (a .p12 and a .mobileprovision) or with a free Apple ID.</p></div></div></div>
+      <div class="qa reveal" style="--d:0.1s"><button aria-expanded="false">How is it different from AltStore or SideStore?<span class="plus" aria-hidden="true"></span></button><div class="answer"><div><p>AltStore and SideStore use a free Apple ID and need a refresh every 7 days. With a developer certificate, Quill-signed apps last as long as the certificate does, usually up to a year. A free Apple ID also works when you have no certificate, with the same 7-day limit. Quill still reads AltStore sources.</p></div></div></div>
+      <div class="qa reveal" style="--d:0.15s"><button aria-expanded="false">How do I install Quill?<span class="plus" aria-hidden="true"></span></button><div class="answer"><div><p>Download the IPA and sign it once with your certificate or free Apple ID, or add the AltStore source. After that, Quill updates itself from Settings → Updates.</p></div></div></div>
+      <div class="qa reveal" style="--d:0.2s"><button aria-expanded="false">Was this made with AI?<span class="plus" aria-hidden="true"></span></button><div class="answer"><div><p>Yes. While the original repository was fully hand crafted, AI was partially used in this fork to speed up development.</p></div></div></div>
+      <div class="qa reveal" style="--d:0.25s"><button aria-expanded="false">Does Quill collect any data?<span class="plus" aria-hidden="true"></span></button><div class="answer"><div><p>No. There's no tracking or analytics. Crash logs stay on your device unless you choose to share them.</p></div></div></div>
+      <div class="qa reveal" style="--d:0.3s"><button aria-expanded="false">Is this the official Quill?<span class="plus" aria-hidden="true"></span></button><div class="answer"><div><p>No. This is an unofficial fork made by NuzFlameV2, building on <a href="https://github.com/claration/feather">Feather by Samara</a>. It isn't made or supported by the original developer, so please report problems with this version here, not to the original project. Both are licensed under GPL-3.0.</p></div></div></div>
+      <div class="qa reveal" style="--d:0.35s"><button aria-expanded="false">How does Quill handle my certificate and Apple ID?<span class="plus" aria-hidden="true"></span></button><div class="answer"><div><p>Certificates and Apple ID credentials stay on your device, in the iOS Keychain. Your Apple ID password goes only to Apple, never to a Quill server. Quill is open source, so you can read the code on GitHub.</p></div></div></div>
+      <div class="qa reveal" style="--d:0.4s"><button aria-expanded="false">Is this the Quill iOS app or other software called Quill?<span class="plus" aria-hidden="true"></span></button><div class="answer"><div><p>This is Quill, the free iOS and iPadOS IPA signer by NuzProjects (NuzFlameV2). It is not related to other software that shares the name.</p></div></div></div>
     </div>
   </section>
 
