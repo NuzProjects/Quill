@@ -12,6 +12,16 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://quill.madebynuz.dev/compare/feather</loc>
+    <lastmod>2026-11-23</lastmod>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://quill.madebynuz.dev/compare/esign</loc>
+    <lastmod>2026-11-23</lastmod>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://quill.madebynuz.dev/llms.txt</loc>
     <lastmod>2026-11-23</lastmod>
   </url>

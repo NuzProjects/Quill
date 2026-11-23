@@ -3,7 +3,9 @@
 
 <img title="Quill" alt="Quill" height="180" src="landing.png">
 
-**Sign and install apps on your iPhone or iPad with your own developer certificate. No computer needed, and it updates itself.**
+**Quill is a free, open-source iOS and iPadOS IPA signer by NuzProjects. Sign and install apps on your iPhone or iPad with your own developer certificate or a free Apple ID. No computer needed, and it updates itself.**
+
+[Website](https://quill.madebynuz.dev) · [Compare Quill with Feather](https://quill.madebynuz.dev/compare/feather) · [Compare with ESign](https://quill.madebynuz.dev/compare/esign)
 
 [![Latest release](https://img.shields.io/github/v/release/NuzProjects/Quill?label=release&color=5B85F0)](https://github.com/NuzProjects/Quill/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/NuzProjects/Quill/total?label=downloads&color=5B85F0&cacheSeconds=3600)](https://github.com/NuzProjects/Quill/releases)
