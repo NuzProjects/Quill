@@ -20,6 +20,7 @@ struct TabbarView: View {
 	@State private var _sidebarExtra: SidebarItem?
 	@State private var _isAddingSource = false
 	@State private var _splitVisibility: NavigationSplitViewVisibility = .all
+	@State private var _visitedTabs: Set<TabEnum> = []
 	@FetchRequest(
 		entity: AltSource.entity(),
 		sortDescriptors: [NSSortDescriptor(keyPath: \AltSource.name, ascending: true)],
@@ -97,6 +98,7 @@ struct TabbarView: View {
 		.overlay(alignment: .bottom) {
 			VStack(spacing: 0) {
 				ActivityProgressPanel()
+				ClipboardImportPill()
 				OfflinePill()
 			}
 				.frame(maxWidth: _tabBarAtTop ? 480 : .infinity)
@@ -295,33 +297,49 @@ private extension TabbarView {
 		}
 	}
 
-	@ViewBuilder
+	/// The tabs stay alive once visited, so switching in the sidebar keeps each tab's
+	/// navigation stack, scroll position and search, like the iPhone tab bar does.
 	var _splitDetail: some View {
-		switch _sidebarExtra ?? .tab(selected) {
-		case .tab(let tab):
-			TabEnum.view(for: tab)
+		let extra = _sidebarExtraView
+		let showsTab = extra == nil
+		return ZStack {
+			ForEach(navigator.tabs.filter { _visitedTabs.contains($0) || $0 == selected }, id: \.self) { tab in
+				let isShown = showsTab && tab == selected
+				TabEnum.view(for: tab)
+					.opacity(isShown ? 1 : 0)
+					.allowsHitTesting(isShown)
+					.accessibilityHidden(!isShown)
+			}
+			if let extra {
+				extra
+			}
+		}
+		.onAppear { _ = _visitedTabs.insert(selected) }
+		.onChange(of: selected) { _ = _visitedTabs.insert($0) }
+	}
+
+	/// The view for a source picked under Sources, or `nil` when a main tab is picked
+	/// (or the picked source was removed).
+	var _sidebarExtraView: AnyView? {
+		switch _sidebarExtra {
+		case .none, .tab:
+			return nil
 		case .allSources:
-			NavigationStack {
+			return AnyView(NavigationStack {
 				SourceAppsView(object: Array(_sources), viewModel: sourcesViewModel)
-			}
+			})
 		case .github(let slug):
-			if let repository = githubSources.repositories.first(where: { $0.slug == slug }) {
-				NavigationStack {
-					GitHubImportView(repository: repository)
-				}
-				.id(slug)
-			} else {
-				TabEnum.view(for: selected)
+			guard let repository = githubSources.repositories.first(where: { $0.slug == slug }) else { return nil }
+			return AnyView(NavigationStack {
+				GitHubImportView(repository: repository)
 			}
+			.id(slug))
 		case .source(let id):
-			if let source = _sources.first(where: { $0.objectID.uriRepresentation().absoluteString == id }) {
-				NavigationStack {
-					SourceAppsView(object: [source], viewModel: sourcesViewModel)
-				}
-				.id(id)
-			} else {
-				TabEnum.view(for: selected)
+			guard let source = _sources.first(where: { $0.objectID.uriRepresentation().absoluteString == id }) else { return nil }
+			return AnyView(NavigationStack {
+				SourceAppsView(object: [source], viewModel: sourcesViewModel)
 			}
+			.id(id))
 		}
 	}
 

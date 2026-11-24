@@ -2,7 +2,6 @@ import SwiftUI
 import NimbleViews
 
 struct GitHubSourceCellView: View {
-	@Environment(\.horizontalSizeClass) private var horizontalSizeClass
 	@ObservedObject private var githubSources = GitHubSources.shared
 
 	var repository: GitHubRepository
@@ -16,19 +15,10 @@ struct GitHubSourceCellView: View {
 	}
 
 	var body: some View {
-		let isRegular = horizontalSizeClass != .compact
-
 		FRIconCellView(
 			title: repository.name,
 			subtitle: subtitle,
 			iconUrl: repository.avatarURL
-		)
-		.padding(isRegular ? 12 : 0)
-		.background(
-			isRegular
-				? RoundedRectangle(cornerRadius: 18, style: .continuous)
-				.fill(Color(.quaternarySystemFill))
-				: nil
 		)
 		.swipeActions {
 			_actions()

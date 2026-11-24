@@ -158,7 +158,7 @@ extension SettingsView {
 				Label("Developer Logs", systemImage: "ladybug")
 			}
 		} footer: {
-			Text(String.localized("When you open Quill with an IPA link copied, it offers to import it.") + " " + String.localized("All of the apps files are contained in the documents directory, here are some quick links to these.") + " " + String.localized("Developer Logs has crash reports and errors you can export for bug reports."))
+			Text(String.localized("When you open Quill with a link copied, it shows a Paste button so you can import an IPA without iOS asking each time.") + " " + String.localized("All of the apps files are contained in the documents directory, here are some quick links to these.") + " " + String.localized("Developer Logs has crash reports and errors you can export for bug reports."))
 		}
 	}
 }

@@ -49096,28 +49096,6 @@
         }
       }
     },
-    "Import This App?" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Import This App?"
-          }
-        }
-      }
-    },
-    "You copied a link to %@ from %@. Download it to your Library?" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "You copied a link to %@ from %@. Download it to your Library?"
-          }
-        }
-      }
-    },
     "Offer Copied IPA Links" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -49129,13 +49107,35 @@
         }
       }
     },
-    "When you open Quill with an IPA link copied, it offers to import it." : {
+    "Import copied link?" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "When you open Quill with an IPA link copied, it offers to import it."
+            "value" : "Import copied link?"
+          }
+        }
+      }
+    },
+    "That link isn't an IPA file" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "That link isn't an IPA file"
+          }
+        }
+      }
+    },
+    "When you open Quill with a link copied, it shows a Paste button so you can import an IPA without iOS asking each time." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When you open Quill with a link copied, it shows a Paste button so you can import an IPA without iOS asking each time."
           }
         }
       }

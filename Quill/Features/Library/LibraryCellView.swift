@@ -3,7 +3,6 @@ import NimbleExtensions
 import NimbleViews
 
 struct LibraryCellView: View {
-	@Environment(\.horizontalSizeClass) private var horizontalSizeClass
 	@Environment(\.editMode) private var editMode
 	@AppStorage("Feather.userTintColor") private var _tintHex: String = "#5B85F0"
 	@ObservedObject private var github = GitHubReleases.shared
@@ -42,7 +41,6 @@ struct LibraryCellView: View {
 	}
 
 	var body: some View {
-		let isRegular = horizontalSizeClass != .compact
 		let isEditing = editMode?.wrappedValue == .active
 
 		Group {
@@ -74,13 +72,6 @@ struct LibraryCellView: View {
 						_buttonActions(for: app)
 					}
 				}
-				.padding(isRegular ? 12 : 0)
-				.background(
-					isRegular
-						? RoundedRectangle(cornerRadius: 18, style: .continuous)
-						.fill(_isSelected && isEditing ? Color.accentColor.opacity(0.1) : Color(.quaternarySystemFill))
-						: nil
-				)
 			}
 		}
 		.contentShape(Rectangle())
