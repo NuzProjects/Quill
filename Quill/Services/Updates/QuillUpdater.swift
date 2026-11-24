@@ -68,10 +68,10 @@ final class QuillUpdater: ObservableObject {
 
 	var releaseNotes: String? {
 		guard let body = latest?.body?.trimmingCharacters(in: .whitespacesAndNewlines), !body.isEmpty else { return nil }
+		// Drop the "## Update x.y" title; the page already shows the version.
 		return body
 			.components(separatedBy: .newlines)
-			.filter { !$0.hasPrefix("#") }
-			.map { line -> String in line.hasPrefix("* ") || line.hasPrefix("- ") ? "• " + String(line.dropFirst(2)) : line }
+			.filter { !$0.hasPrefix("## ") && !$0.hasPrefix("# ") }
 			.joined(separator: "\n")
 			.trimmingCharacters(in: .whitespacesAndNewlines)
 	}

@@ -9,6 +9,7 @@ enum AppCompatibility {
 		case certificateExpired(String)
 		case certificateRevoked(String)
 		case certificateExpiresSoon(String, Date)
+		case deviceNotInProfile(String)
 		case appIDLimitReached(nextSlot: Date)
 		case appIDLimitClose(used: Int)
 		case lowStorage(neededMB: Int, freeMB: Int)
@@ -35,7 +36,7 @@ enum AppCompatibility {
 		var icon: String {
 			switch self {
 			case .encrypted: "lock.fill"
-			case .needsNewerIOS, .iPadOnly: "iphone.slash"
+			case .needsNewerIOS, .iPadOnly, .deviceNotInProfile: "iphone.slash"
 			case .certificateExpired, .certificateRevoked, .certificateExpiresSoon: "checkmark.seal"
 			case .appIDLimitReached, .appIDLimitClose: "number"
 			case .lowStorage: "internaldrive"
@@ -58,6 +59,8 @@ enum AppCompatibility {
 				return String(format: .localized("Apple revoked %@, so apps signed with it won't open. Pick or import another certificate."), name)
 			case .certificateExpiresSoon(let name, let date):
 				return String(format: .localized("%@ expires %@, so this app will stop opening soon after."), name, date.formatted(.relative(presentation: .named)))
+			case .deviceNotInProfile(let name):
+				return String(format: .localized("This device isn't in %@'s provisioning profile, so iOS will refuse to install the app. Add this device's UDID to the profile, or pick another certificate."), name)
 			case .appIDLimitReached(let next):
 				return String(format: .localized("This Apple ID has used all %ld new App IDs Apple allows per week. The next one frees up %@. Re-signing an app you already signed doesn't count."), AppIDUsage.weeklyLimit, next.formatted(.relative(presentation: .named)))
 			case .appIDLimitClose(let used):
@@ -103,6 +106,9 @@ enum AppCompatibility {
 				if expiration <= Date() { result.append(.certificateExpired(name)) }
 				else if expiration.timeIntervalSinceNow < 2 * 86400 { result.append(.certificateExpiresSoon(name, expiration)) }
 			}
+			if deviceIsListed(in: certificate) == false {
+				result.append(.deviceNotInProfile(name))
+			}
 			if let marker = AppleIDAccount.marker(for: certificate), let identifier, !identifier.isEmpty {
 				let suffix = "." + marker.teamID
 				let full = identifier.hasSuffix(suffix) ? identifier : identifier + suffix
@@ -126,6 +132,20 @@ enum AppCompatibility {
 			}
 		}
 		return result
+	}
+
+	/// Whether this device's UDID is in the certificate's provisioning profile.
+	/// `nil` when it can't be told: the profile covers every device, lists none, or this device's UDID isn't known yet.
+	static func deviceIsListed(in certificate: CertificatePair) -> Bool? {
+		guard let profile = Storage.shared.getProvisionFileDecoded(for: certificate) else { return nil }
+		return deviceIsListed(in: profile)
+	}
+
+	static func deviceIsListed(in profile: Certificate) -> Bool? {
+		if profile.ProvisionsAllDevices == true { return nil }
+		guard let devices = profile.ProvisionedDevices, !devices.isEmpty, let udid = AppleIDAccount.knownUDID?.value else { return nil }
+		let normalized = udid.uppercased()
+		return devices.contains { $0.uppercased() == normalized }
 	}
 
 	static func isVersion(_ version: String, newerThan other: String) -> Bool {

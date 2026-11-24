@@ -4,7 +4,6 @@ import SwiftUI
 import NimbleViews
 
 struct SourcesView: View {
-	@Environment(\.horizontalSizeClass) private var horizontalSizeClass
 	@ObservedObject private var githubSources = GitHubSources.shared
 	@StateObject var viewModel = SourcesViewModel.shared
 	@State private var _isAddingPresenting = false
@@ -72,7 +71,6 @@ struct SourcesView: View {
 						NavigationLink {
 							SourceAppsView(object: Array(_sources), viewModel: viewModel)
 						} label: {
-							let isRegular = horizontalSizeClass != .compact
 							HStack(spacing: 18) {
 								Image("Repositories").appIconStyle()
 								NBTitleWithSubtitleView(
@@ -80,13 +78,6 @@ struct SourcesView: View {
 									subtitle: .localized("See all apps from your sources")
 								)
 							}
-							.padding(isRegular ? 12 : 0)
-							.background(
-								isRegular
-									? RoundedRectangle(cornerRadius: 18, style: .continuous)
-									.fill(Color(.quaternarySystemFill))
-									: nil
-							)
 						}
 						.buttonStyle(.plain)
 					}

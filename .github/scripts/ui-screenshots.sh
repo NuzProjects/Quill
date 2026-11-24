@@ -144,6 +144,30 @@ rotate() {
 		|| echo "Couldn't rotate"
 	sleep 3
 }
+# Imports placeholder apps through Quill's copied-link prompt so the Library has content.
+# Each link is copied, Quill is sent to the background and brought back, and the prompt is accepted.
+import_sample_apps() {
+	local dir="${TMPDIR:-/tmp}/quill-sample-ipas" port=8765
+	python3 -I "$(dirname "$0")/make-sample-ipas.py" "$dir" > "$dir.list" || { echo "Couldn't make sample apps"; return; }
+	(cd "$dir" && exec python3 -m http.server "$port" --bind 127.0.0.1) >/dev/null 2>&1 &
+	SAMPLE_SERVER=$!
+	sleep 2
+	while read -r slug; do
+		printf 'http://127.0.0.1:%s/%s.ipa' "$port" "$slug" | xcrun simctl pbcopy "$UDID"
+		xcrun simctl launch "$UDID" com.apple.Preferences >/dev/null 2>&1 || true
+		sleep 2
+		xcrun simctl launch "$UDID" "$BUNDLE" >/dev/null 2>&1
+		sleep 2
+		locate "Allow Paste" >/dev/null 2>&1 && tap "Allow Paste"
+		if wait_for "Import This App?"; then
+			tap "Import"
+			sleep 4
+		else
+			echo "No import prompt for $slug"
+		fi
+	done < "$dir.list"
+	kill "$SAMPLE_SERVER" 2>/dev/null || true
+}
 CRASHES_BEFORE="$(ls ~/Library/Logs/DiagnosticReports 2>/dev/null | grep -c '^Quill' || true)"
 crashed() {
 	[ "$(ls ~/Library/Logs/DiagnosticReports 2>/dev/null | grep -c '^Quill' || true)" -gt "$CRASHES_BEFORE" ]
@@ -174,7 +198,15 @@ tap "last:Quill"; shot app-page
 tap "Sources"; tap "Sources"
 tap "LiveContainer"; sleep 4; shot github-source
 tap "Sources"
+import_sample_apps
 tap "Library"; shot library
+# Switch the Library to the grid layout and relaunch so the setting is read.
+xcrun simctl terminate "$UDID" "$BUNDLE" || true
+xcrun simctl spawn "$UDID" defaults write "$PREFS" Quill.libraryLayout -string grid
+xcrun simctl launch "$UDID" "$BUNDLE"
+wait_for "Sources"
+sleep 2
+tap "Library"; shot library-grid
 tap "Settings"; shot settings
 tap "Appearance"; shot settings-appearance
 tap "Settings"
@@ -197,6 +229,8 @@ if [ "$KIND" = "iPad" ]; then
 	tap "last:Quill"; landscape_shot app-page-landscape
 	tap "Sources"; tap "Sources"
 	tap "LiveContainer"; sleep 4; landscape_shot github-source-landscape
+	tap "Sources"
+	tap "Library"; landscape_shot library-landscape
 fi
 
 xcrun simctl spawn "$UDID" log show --last 10m --predicate "process == \"Quill\" AND messageType == fault" --style compact > "$OUT/faults.log" 2>/dev/null || true

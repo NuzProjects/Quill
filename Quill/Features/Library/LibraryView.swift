@@ -25,6 +25,7 @@ struct LibraryView: View {
 	@Namespace private var _namespace
 
 	@AppStorage("Quill.librarySort") private var _sort: Sort = .dateSigned
+	@AppStorage("Quill.libraryLayout") private var _layout: Layout = .list
 
 	private func filteredAndSortedApps<T>(from apps: FetchedResults<T>) -> [T] where T: NSManagedObject & AppInfoPresentable {
 		let filtered = apps.filter {
@@ -92,47 +93,11 @@ struct LibraryView: View {
 
 	var body: some View {
 		NBNavigationView(.localized("Library")) {
-			NBListAdaptable {
-				if
-					!_filteredSignedApps.isEmpty,
-					_selectedScope == .all || _selectedScope == .signed
-				{
-					NBSection(
-						.localized("Signed"),
-						secondary: _filteredSignedApps.count.description
-					) {
-						ForEach(_filteredSignedApps, id: \.uuid) { app in
-							LibraryCellView(
-								app: app,
-								selectedInfoAppPresenting: $_selectedInfoAppPresenting,
-								selectedSigningAppPresenting: $_selectedSigningAppPresenting,
-								selectedInstallAppPresenting: $_selectedInstallAppPresenting,
-								selectedAppUUIDs: $_selectedAppUUIDs
-							)
-							.compatMatchedTransitionSource(id: app.uuid ?? "", ns: _namespace)
-						}
-					}
-				}
-
-				if
-					!_filteredImportedApps.isEmpty,
-					_selectedScope == .all || _selectedScope == .imported
-				{
-					NBSection(
-						.localized("Imported"),
-						secondary: _filteredImportedApps.count.description
-					) {
-						ForEach(_filteredImportedApps, id: \.uuid) { app in
-							LibraryCellView(
-								app: app,
-								selectedInfoAppPresenting: $_selectedInfoAppPresenting,
-								selectedSigningAppPresenting: $_selectedSigningAppPresenting,
-								selectedInstallAppPresenting: $_selectedInstallAppPresenting,
-								selectedAppUUIDs: $_selectedAppUUIDs
-							)
-							.compatMatchedTransitionSource(id: app.uuid ?? "", ns: _namespace)
-						}
-					}
+			Group {
+				if _layout == .grid {
+					_gridContent()
+				} else {
+					_listContent()
 				}
 			}
 			.searchable(text: $_searchText, placement: .platform())
@@ -207,10 +172,17 @@ struct LibraryView: View {
 						} label: {
 							Text(.localized("Sort By"))
 						}
+						Picker(selection: $_layout.animation(.snappy)) {
+							ForEach(Layout.allCases, id: \.self) { layout in
+								Label(layout.displayName, systemImage: layout.icon).tag(layout)
+							}
+						} label: {
+							Text(.localized("View As"))
+						}
 					} label: {
-						Image(systemName: "arrow.up.arrow.down")
+						Image(systemName: "line.3.horizontal.decrease")
 					}
-					.accessibilityLabel(String.localized("Sort By"))
+					.accessibilityLabel(String.localized("Sort and View"))
 					.opacity(_editMode.isEditing ? 0 : 1)
 					.allowsHitTesting(!_editMode.isEditing)
 					.accessibilityHidden(_editMode.isEditing)
@@ -319,6 +291,80 @@ struct LibraryView: View {
 }
 
 extension LibraryView {
+	private var _showsSigned: Bool {
+		!_filteredSignedApps.isEmpty && (_selectedScope == .all || _selectedScope == .signed)
+	}
+
+	private var _showsImported: Bool {
+		!_filteredImportedApps.isEmpty && (_selectedScope == .all || _selectedScope == .imported)
+	}
+
+	private func _cell(_ app: AppInfoPresentable, grid: Bool) -> some View {
+		LibraryCellView(
+			app: app,
+			isGrid: grid,
+			selectedInfoAppPresenting: $_selectedInfoAppPresenting,
+			selectedSigningAppPresenting: $_selectedSigningAppPresenting,
+			selectedInstallAppPresenting: $_selectedInstallAppPresenting,
+			selectedAppUUIDs: $_selectedAppUUIDs
+		)
+		.compatMatchedTransitionSource(id: app.uuid ?? "", ns: _namespace)
+	}
+
+	@ViewBuilder
+	private func _listContent() -> some View {
+		NBListAdaptable {
+			if _showsSigned {
+				NBSection(.localized("Signed"), secondary: _filteredSignedApps.count.description) {
+					ForEach(_filteredSignedApps, id: \.uuid) { _cell($0, grid: false) }
+				}
+			}
+			if _showsImported {
+				NBSection(.localized("Imported"), secondary: _filteredImportedApps.count.description) {
+					ForEach(_filteredImportedApps, id: \.uuid) { _cell($0, grid: false) }
+				}
+			}
+		}
+	}
+
+	@ViewBuilder
+	private func _gridContent() -> some View {
+		let columns = [GridItem(.adaptive(minimum: 92, maximum: 120), spacing: 12, alignment: .top)]
+		ScrollView {
+			VStack(alignment: .leading, spacing: 24) {
+				if _showsSigned {
+					_gridHeader(.localized("Signed"), count: _filteredSignedApps.count)
+					LazyVGrid(columns: columns, spacing: 20) {
+						ForEach(_filteredSignedApps, id: \.uuid) { _cell($0, grid: true) }
+					}
+				}
+				if _showsImported {
+					_gridHeader(.localized("Imported"), count: _filteredImportedApps.count)
+					LazyVGrid(columns: columns, spacing: 20) {
+						ForEach(_filteredImportedApps, id: \.uuid) { _cell($0, grid: true) }
+					}
+				}
+			}
+			.padding(.horizontal)
+			.padding(.bottom, 24)
+		}
+	}
+
+	private func _gridHeader(_ title: String, count: Int) -> some View {
+		HStack {
+			Text(title)
+				.font(.title2.bold())
+			Spacer()
+			Text(count.description)
+				.font(.subheadline.weight(.semibold))
+				.foregroundStyle(.secondary)
+				.contentTransition(.numericText())
+		}
+		.padding(.top, 8)
+		.accessibilityElement(children: .combine)
+		.accessibilityAddTraits(.isHeader)
+	}
+
 	@ViewBuilder
 	private func _importActions() -> some View {
 		Button { _isGitHubPresenting = true } label: { Label { Text("Import from GitHub") } icon: { Image("GitHubMark").renderingMode(.template) } }
@@ -402,6 +448,27 @@ extension LibraryView {
 			case .all: return .localized("All")
 			case .signed: return .localized("Signed")
 			case .imported: return .localized("Imported")
+			}
+		}
+	}
+}
+
+extension LibraryView {
+	enum Layout: String, CaseIterable {
+		case list
+		case grid
+
+		var displayName: String {
+			switch self {
+			case .list: return .localized("List")
+			case .grid: return .localized("Grid")
+			}
+		}
+
+		var icon: String {
+			switch self {
+			case .list: return "list.bullet"
+			case .grid: return "square.grid.2x2"
 			}
 		}
 	}

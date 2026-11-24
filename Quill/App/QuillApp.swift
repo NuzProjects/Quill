@@ -48,6 +48,7 @@ struct QuillApp: App {
 					Task { await GitHubReleases.shared.check(); GitHubReleases.schedule() }
 					Task { await SourceUpdateChecker.check() }
 					Task { await RemoteConfig.shared.refresh() }
+					ClipboardImport.check()
 				}
 			}
 			.onAppear {

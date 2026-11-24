@@ -1,5 +1,6 @@
 import SwiftUI
 import UIKit
+import NukeUI
 
 struct TabbarView: View {
 	@Environment(\.horizontalSizeClass) private var horizontalSizeClass
@@ -14,6 +15,39 @@ struct TabbarView: View {
 	@State private var acceptedPrompt = false
 	@State private var showWhatsNew = false
 	@State private var showOnboarding = false
+	@ObservedObject private var githubSources = GitHubSources.shared
+	@ObservedObject private var sourcesViewModel = SourcesViewModel.shared
+	@State private var _sidebarExtra: SidebarItem?
+	@State private var _isAddingSource = false
+	@State private var _splitVisibility: NavigationSplitViewVisibility = .all
+	@FetchRequest(
+		entity: AltSource.entity(),
+		sortDescriptors: [NSSortDescriptor(keyPath: \AltSource.name, ascending: true)],
+		animation: .snappy
+	) private var _sources: FetchedResults<AltSource>
+
+	/// What the iPad sidebar has selected: one of the main tabs, or a source row under Sources.
+	enum SidebarItem: Hashable {
+		case tab(TabEnum)
+		case allSources
+		case source(String)
+		case github(String)
+	}
+
+	private var _sidebarSelection: Binding<SidebarItem> {
+		Binding(
+			get: { _sidebarExtra ?? .tab(selected) },
+			set: { new in
+				if new != (_sidebarExtra ?? .tab(selected)) { TabTransition.crossfade() }
+				if case .tab(let tab) = new {
+					_sidebarExtra = nil
+					selected = tab
+				} else {
+					_sidebarExtra = new
+				}
+			}
+		)
+	}
 
 	private var _selection: Binding<TabEnum> {
 		Binding(
@@ -29,12 +63,13 @@ struct TabbarView: View {
 		Set(sourceUpdates.updates.keys).union(githubUpdates.updates.keys).count
 	}
 
+	/// iPad at full width shows the sidebar, so nothing sits along the bottom edge.
 	private var _tabBarAtTop: Bool {
-		guard #available(iOS 18, *) else { return false }
-		return UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular
+		UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular
 	}
 
-	var body: some View {
+	@ViewBuilder
+	private var _classicTabView: some View {
 		TabView(selection: _selection) {
 			ForEach(navigator.tabs, id: \.self) { tab in
 				TabEnum.view(for: tab)
@@ -44,6 +79,19 @@ struct TabbarView: View {
 					.tag(tab)
 			}
 		}
+	}
+
+	@ViewBuilder
+	private var _tabView: some View {
+		if UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular {
+			_splitView
+		} else {
+			_classicTabView
+		}
+	}
+
+	var body: some View {
+		_tabView
 		.symbolVariant(.fill)
 		.background(TabLabelApplier(tabs: navigator.tabs, showLabels: navigator.showLabels))
 		.overlay(alignment: .bottom) {
@@ -71,17 +119,20 @@ struct TabbarView: View {
 		.onChange(of: router.openLibrary) { open in
 			guard open else { return }
 			router.openLibrary = false
+			_sidebarExtra = nil
 			if navigator.tabs.contains(.library), selected != .library {
 				TabTransition.crossfade()
 				selected = .library
 			}
 		}
 		.onChange(of: router.openApp?.id) { id in
+			if id != nil { _sidebarExtra = nil }
 			guard id != nil, navigator.tabs.contains(.library), selected != .library else { return }
 			TabTransition.crossfade()
 			selected = .library
 		}
 		.onChange(of: router.signApp?.id) { id in
+			if id != nil { _sidebarExtra = nil }
 			guard id != nil, navigator.tabs.contains(.library), selected != .library else { return }
 			TabTransition.crossfade()
 			selected = .library
@@ -156,6 +207,7 @@ struct TabbarView: View {
 
 private extension TabbarView {
 	func _installPromptedUpdate() {
+		_sidebarExtra = nil
 		if navigator.tabs.contains(.settings) {
 			if selected != .settings { TabTransition.crossfade() }
 			selected = .settings
@@ -164,6 +216,146 @@ private extension TabbarView {
 			installingFromPrompt = true
 		}
 		updater.install()
+	}
+}
+
+private extension TabbarView {
+	/// iPad at full width: a sidebar that always stays open, like the original Feather one, plus Quill's
+	/// GitHub sources, Library update badge and Navigator tabs.
+	var _splitView: some View {
+		NavigationSplitView(columnVisibility: $_splitVisibility) {
+			List(selection: Binding<SidebarItem?>(
+				get: { _sidebarSelection.wrappedValue },
+				set: { if let new = $0 { _sidebarSelection.wrappedValue = new } }
+			)) {
+				Section {
+					ForEach(navigator.tabs, id: \.self) { tab in
+						Label(tab.title, systemImage: tab.icon)
+							.badge(tab == .library ? _libraryUpdateCount : 0)
+							.tag(SidebarItem.tab(tab))
+					}
+				}
+
+				Section(String.localized("Sources")) {
+					Label(String.localized("All Repositories"), systemImage: "globe.desk")
+						.tag(SidebarItem.allSources)
+
+					ForEach(githubSources.repositories) { repository in
+						_sidebarLabel(repository.name, iconURL: repository.avatarURL, fallback: Image("GitHubMark").renderingMode(.template))
+							.tag(SidebarItem.github(repository.slug))
+							.swipeActions {
+								Button(String.localized("Delete"), systemImage: "trash", role: .destructive) {
+									if _sidebarExtra == .github(repository.slug) { _sidebarExtra = nil }
+									githubSources.remove(repository)
+								}
+							}
+					}
+
+					ForEach(_sources, id: \.objectID) { source in
+						_sidebarLabel(source.name ?? .localized("Unknown"), iconURL: source.iconURL, fallback: Image(systemName: "app.dashed"))
+							.tag(SidebarItem.source(source.objectID.uriRepresentation().absoluteString))
+							.swipeActions {
+								Button(String.localized("Delete"), systemImage: "trash", role: .destructive) {
+									_sidebarExtra = nil
+									Storage.shared.deleteSource(for: source)
+								}
+							}
+					}
+
+					Button {
+						_isAddingSource = true
+					} label: {
+						Label(String.localized("Add Source"), systemImage: "plus")
+					}
+				}
+			}
+			.listStyle(.sidebar)
+			.symbolVariant(.none)
+			.navigationTitle("Quill")
+			.navigationBarTitleDisplayMode(.large)
+			.modifier(HideSidebarToggle())
+			.navigationSplitViewColumnWidth(min: 260, ideal: 300, max: 340)
+		} detail: {
+			_splitDetail
+				.environment(\.managedObjectContext, Storage.shared.context)
+		}
+		.navigationSplitViewStyle(.balanced)
+		.onChange(of: _splitVisibility) { visibility in
+			if visibility != .all { _splitVisibility = .all }
+		}
+		.task(id: Array(_sources)) {
+			await sourcesViewModel.fetchSources(_sources)
+		}
+		.task {
+			await githubSources.refreshDates()
+		}
+		.sheet(isPresented: $_isAddingSource) {
+			SourcesAddView()
+				.presentationDetents([.medium])
+		}
+	}
+
+	@ViewBuilder
+	var _splitDetail: some View {
+		switch _sidebarExtra ?? .tab(selected) {
+		case .tab(let tab):
+			TabEnum.view(for: tab)
+		case .allSources:
+			NavigationStack {
+				SourceAppsView(object: Array(_sources), viewModel: sourcesViewModel)
+			}
+		case .github(let slug):
+			if let repository = githubSources.repositories.first(where: { $0.slug == slug }) {
+				NavigationStack {
+					GitHubImportView(repository: repository)
+				}
+				.id(slug)
+			} else {
+				TabEnum.view(for: selected)
+			}
+		case .source(let id):
+			if let source = _sources.first(where: { $0.objectID.uriRepresentation().absoluteString == id }) {
+				NavigationStack {
+					SourceAppsView(object: [source], viewModel: sourcesViewModel)
+				}
+				.id(id)
+			} else {
+				TabEnum.view(for: selected)
+			}
+		}
+	}
+
+	func _sidebarLabel(_ title: String, iconURL: URL?, fallback: Image) -> some View {
+		Label {
+			Text(title)
+		} icon: {
+			Group {
+				if let iconURL {
+					LazyImage(url: iconURL) { state in
+						if let image = state.image {
+							image.resizable().scaledToFill()
+						} else {
+							fallback.resizable().scaledToFit().padding(3).foregroundStyle(.secondary)
+						}
+					}
+				} else {
+					fallback.resizable().scaledToFit().padding(3).foregroundStyle(.secondary)
+				}
+			}
+			.frame(width: 24, height: 24)
+			.clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+		}
+	}
+}
+
+/// Removes the button that would hide the sidebar, so it stays open (iOS 17 and later).
+private struct HideSidebarToggle: ViewModifier {
+	func body(content: Content) -> some View {
+		if #available(iOS 17, *) {
+			content.toolbar(removing: .sidebarToggle)
+		} else {
+			content
+		}
 	}
 }
 

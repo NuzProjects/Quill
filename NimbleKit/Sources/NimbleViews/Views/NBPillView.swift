@@ -29,7 +29,7 @@ public struct NBPillView: View {
 			Image(systemName: icon)
 				.font(.caption)
 				.foregroundStyle(color.opacity(0.9))
-			Text(title)
+			NBRollingText(title)
 				.font(.caption.bold())
 		}
 		.frame(maxWidth: .infinity)
