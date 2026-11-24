@@ -1,0 +1,50 @@
+name: Suggest a Feature
+description: Suggest an idea or improvement for Quill.
+title: '[Feature] '
+labels:
+  - enhancement
+
+body:
+  - type: markdown
+    attributes:
+      value: >-
+        Thanks for the idea! Please check that it hasn't already been
+        suggested, and read the [contributing
+        rules](https://github.com/NuzProjects/Quill/blob/main/.github/CONTRIBUTING.md#rules):
+        Quill can't use exploits or company-owned certificates.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What would you like to do?
+      description: The problem or use case, in your own words.
+      placeholder: When I sign an app, I'd like to...
+    validations:
+      required: true
+
+  - type: textarea
+    id: idea
+    attributes:
+      label: How could Quill help?
+      description: How you picture it working. Screenshots or mockups are welcome.
+    validations:
+      required: false
+
+  - type: dropdown
+    id: device
+    attributes:
+      label: Device
+      options:
+        - iPhone
+        - iPad
+        - Both
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: contribute
+    attributes:
+      label: Contributor Checks
+      options:
+        - label: I am willing to attempt to make a pull request for this
+          required: false

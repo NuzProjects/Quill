@@ -4,6 +4,8 @@ on:
   push:
     branches: [main]
     paths: ['Quill/Core/**', 'Tests/**', 'Package.swift', '.github/workflows/core-checks.yml']
+  pull_request:
+    paths: ['Quill/Core/**', 'Tests/**', 'Package.swift', '.github/workflows/core-checks.yml']
 permissions:
   contents: read
 jobs:
