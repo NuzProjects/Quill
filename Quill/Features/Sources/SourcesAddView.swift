@@ -82,6 +82,7 @@ struct SourcesAddView: View {
 						UIPasteboard.general.string = sources.map {
 							$0.sourceURL!.absoluteString
 						}.joined(separator: "\n")
+						ClipboardImport.markOwnCopy()
 						UIAlertController.showAlertWithOk(
 							title: .localized("Success"),
 							message: .localized("Sources copied to clipboard")

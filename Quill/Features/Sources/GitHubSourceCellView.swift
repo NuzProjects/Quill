@@ -42,6 +42,7 @@ struct GitHubSourceCellView: View {
 	private func _contextActions() -> some View {
 		Button(.localized("Copy"), systemImage: "doc.on.clipboard") {
 			UIPasteboard.general.string = repository.webURL.absoluteString
+			ClipboardImport.markOwnCopy()
 		}
 		Button(.localized("Open in GitHub"), systemImage: "safari") {
 			UIApplication.shared.open(repository.webURL)

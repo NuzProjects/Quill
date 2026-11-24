@@ -69,6 +69,7 @@ extension ConfigurationView {
 			}
 			Button(.localized("Copy")) {
 				UIPasteboard.general.string = _optionsManager.options.ppqString
+				ClipboardImport.markOwnCopy()
 			}
 		}
 	}

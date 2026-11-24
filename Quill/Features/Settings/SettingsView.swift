@@ -145,6 +145,9 @@ extension SettingsView {
 			Toggle(isOn: $_clipboardImport) {
 				Label(.localized("Offer Copied IPA Links"), systemImage: "doc.on.clipboard")
 			}
+			.onChange(of: _clipboardImport) { isOn in
+				if !isOn { ClipboardImport.shared.dismiss() }
+			}
 			Button(.localized("Open Documents"), systemImage: "folder") {
 				UIApplication.open(URL.documentsDirectory.toSharedDocumentsURL()!)
 			}

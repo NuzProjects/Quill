@@ -1,5 +1,6 @@
 import SwiftUI
 import UIKit
+import UniformTypeIdentifiers
 import NimbleExtensions
 
 /// Offers to import an `.ipa` link the user copied before opening Quill.
@@ -10,8 +11,8 @@ import NimbleExtensions
 @MainActor
 final class ClipboardImport: ObservableObject {
 	static let shared = ClipboardImport()
-	static let enabledKey = "Quill.clipboardImport"
-	private static let lastChangeKey = "Quill.clipboardLastChangeCount"
+	nonisolated static let enabledKey = "Quill.clipboardImport"
+	private nonisolated static let lastChangeKey = "Quill.clipboardLastChangeCount"
 
 	enum State: Equatable {
 		case hidden
@@ -48,7 +49,41 @@ final class ClipboardImport: ObservableObject {
 		}
 	}
 
-	/// Handles what the Paste button handed over.
+	/// Call right after Quill itself copies something, so the pill doesn't offer Quill's own link back.
+	nonisolated static func markOwnCopy() {
+		UserDefaults.standard.set(UIPasteboard.general.changeCount, forKey: lastChangeKey)
+	}
+
+	/// Handles what the Paste button handed over. Links copied as a URL and links copied as text both work.
+	func paste(_ providers: [NSItemProvider]) {
+		Task { @MainActor in
+			var strings: [String] = []
+			for provider in providers {
+				if let text = await Self._text(from: provider) { strings.append(text) }
+			}
+			self.paste(strings)
+		}
+	}
+
+	private static func _text(from provider: NSItemProvider) async -> String? {
+		if provider.canLoadObject(ofClass: NSURL.self), let url = await _load(NSURL.self, from: provider) {
+			return url.absoluteString
+		}
+		if provider.canLoadObject(ofClass: NSString.self), let text = await _load(NSString.self, from: provider) {
+			return text as String
+		}
+		return nil
+	}
+
+	private static func _load<T: NSItemProviderReading>(_ type: T.Type, from provider: NSItemProvider) async -> T? {
+		await withCheckedContinuation { continuation in
+			_ = provider.loadObject(ofClass: type) { object, _ in
+				continuation.resume(returning: object as? T)
+			}
+		}
+	}
+
+	/// Checks the pasted text for an `.ipa`/`.tipa` link and downloads it.
 	func paste(_ strings: [String]) {
 		guard let url = strings.lazy.compactMap(Self.ipaURL(from:)).first else {
 			UINotificationFeedbackGenerator().notificationOccurred(.warning)
@@ -113,8 +148,8 @@ struct ClipboardImportPill: View {
 					.foregroundStyle(.orange)
 			} else {
 				Label(.localized("Import copied link?"), systemImage: "doc.on.clipboard")
-				PasteButton(payloadType: String.self) { strings in
-					Task { @MainActor in ClipboardImport.shared.paste(strings) }
+				PasteButton(supportedContentTypes: [.url, .plainText]) { providers in
+					Task { @MainActor in ClipboardImport.shared.paste(providers) }
 				}
 				.labelStyle(.titleOnly)
 				.buttonBorderShape(.capsule)

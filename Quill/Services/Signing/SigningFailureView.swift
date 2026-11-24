@@ -37,6 +37,7 @@ struct SigningFailureView: View {
 				Section {
 					Button {
 						UIPasteboard.general.string = "\(failure.appName): \(failure.error)"
+						ClipboardImport.markOwnCopy()
 						UINotificationFeedbackGenerator().notificationOccurred(.success)
 						withAnimation(.snappy) { copied = true }
 					} label: {
