@@ -272,6 +272,7 @@ private extension TabbarView {
 			.listStyle(.sidebar)
 			.symbolVariant(.none)
 			.navigationTitle("Quill")
+			.navigationBarTitleDisplayMode(.large)
 			.modifier(HideSidebarToggle())
 			.navigationSplitViewColumnWidth(min: 260, ideal: 300, max: 340)
 		} detail: {

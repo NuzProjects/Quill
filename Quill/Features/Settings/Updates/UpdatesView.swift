@@ -28,9 +28,8 @@ struct UpdatesView: View {
 
 			NBSection(.localized("What's New")) {
 				if updater.updateAvailable, let notes = updater.releaseNotes {
-					Text(LocalizedStringKey(notes))
-						.font(.subheadline)
-						.frame(maxWidth: .infinity, alignment: .leading)
+					ReleaseNotesView(markdown: notes, spacing: 18)
+						.padding(.vertical, 6)
 						.id(updater.latest?.id)
 						.transition(.opacity)
 				}

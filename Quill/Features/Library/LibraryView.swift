@@ -180,7 +180,7 @@ struct LibraryView: View {
 							Text(.localized("View As"))
 						}
 					} label: {
-						Image(systemName: "arrow.up.arrow.down")
+						Image(systemName: "line.3.horizontal.decrease")
 					}
 					.accessibilityLabel(String.localized("Sort and View"))
 					.opacity(_editMode.isEditing ? 0 : 1)
