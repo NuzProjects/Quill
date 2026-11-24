@@ -41,6 +41,7 @@ struct VersionHistoryView: View {
 
 							Button {
 								UIPasteboard.general.string = downloadURL.absoluteString
+								ClipboardImport.markOwnCopy()
 							} label: {
 								Label(.localized("Copy Download URL"), systemImage: "doc.on.clipboard")
 							}

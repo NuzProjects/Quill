@@ -284,6 +284,7 @@ extension SourceAppsTableRepresentableView { class Coordinator: NSObject, UITabl
 				image: UIImage(systemName: "list.bullet"),
 				children: self._contextActions(for: entry.app, with: { _, url in
 					UIPasteboard.general.string = url?.absoluteString
+					ClipboardImport.markOwnCopy()
 				}, image: UIImage(systemName: "doc.on.clipboard"))
 			)
 

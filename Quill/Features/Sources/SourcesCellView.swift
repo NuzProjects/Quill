@@ -3,7 +3,6 @@ import NimbleViews
 import NukeUI
 
 struct SourcesCellView: View {
-	@Environment(\.horizontalSizeClass) private var horizontalSizeClass
 	@ObservedObject private var viewModel = SourcesViewModel.shared
 
 	var source: AltSource
@@ -22,19 +21,10 @@ struct SourcesCellView: View {
 	}
 
 	var body: some View {
-		let isRegular = horizontalSizeClass != .compact
-
 		FRIconCellView(
 			title: source.name ?? .localized("Unknown"),
 			subtitle: subtitle,
 			iconUrl: source.iconURL
-		)
-		.padding(isRegular ? 12 : 0)
-		.background(
-			isRegular
-				? RoundedRectangle(cornerRadius: 18, style: .continuous)
-				.fill(Color(.quaternarySystemFill))
-				: nil
 		)
 		.swipeActions {
 			_actions(for: source)
@@ -60,6 +50,7 @@ extension SourcesCellView {
 	private func _contextActions(for source: AltSource) -> some View {
 		Button(.localized("Copy"), systemImage: "doc.on.clipboard") {
 			UIPasteboard.general.string = source.sourceURL?.absoluteString
+			ClipboardImport.markOwnCopy()
 		}
 	}
 }

@@ -7,14 +7,12 @@ public struct NBListAdaptable<Content>: View where Content: View {
 		self._content = content()
 	}
 
-	// Always plain rows, like iPhone, including on iPad. The compact size
-	// class is passed down so cells use their row style, not cards.
+	// Always plain rows, like iPhone, including on iPad.
 	public var body: some View {
 		List {
 			_content
 		}
 		.listStyle(.plain)
 		.environment(\.nbInlineSectionHeaders, true)
-		.environment(\.horizontalSizeClass, .compact)
 	}
 }
