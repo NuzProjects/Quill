@@ -39,6 +39,7 @@ struct QuillApp: App {
 			}
 			.task { await GitHubReleases.shared.check(); GitHubReleases.schedule() }
 			.task { await SourceUpdateChecker.check() }
+			.task { await CertificateSync.sync() }
 			.task { await RemoteConfig.shared.refresh(force: true) }
 			.onChange(of: scenePhase) { phase in
 				if phase == .background {
@@ -47,6 +48,7 @@ struct QuillApp: App {
 				if phase == .active {
 					Task { await GitHubReleases.shared.check(); GitHubReleases.schedule() }
 					Task { await SourceUpdateChecker.check() }
+					Task { await CertificateSync.sync() }
 					Task { await RemoteConfig.shared.refresh() }
 					ClipboardImport.check()
 				}
@@ -103,7 +105,8 @@ struct QuillApp: App {
 	}
 
 	private func _handleURL(_ url: URL) {
-		if url.scheme == "feather" {
+		// quill:// is the main link. feather:// keeps working for links made before the rename.
+		if let scheme = url.scheme?.lowercased(), scheme == "quill" || scheme == "feather" {
 			if url.host == "import-certificate" {
 				guard
 					let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
@@ -162,6 +165,35 @@ struct QuillApp: App {
 
 				return
 			}
+			// Control Center, Lock Screen and Action button controls
+			if url.host == "import" {
+				NotificationRouter.shared.importIPA = true
+				return
+			}
+			if url.host == "paste" {
+				// The person tapped the control on purpose, so reading the clipboard here is expected.
+				let strings = [UIPasteboard.general.url?.absoluteString, UIPasteboard.general.string].compactMap { $0 }
+				ClipboardImport.shared.paste(strings)
+				NotificationRouter.shared.openLibrary = true
+				return
+			}
+			if url.host == "sign-latest" {
+				let request = Imported.fetchRequest()
+				request.sortDescriptors = [NSSortDescriptor(key: "date", ascending: false)]
+				request.fetchLimit = 1
+				if let latest = (try? Storage.shared.context.fetch(request))?.first {
+					NotificationRouter.shared.signApp = AnyApp(base: latest)
+				} else {
+					NotificationRouter.shared.importIPA = true
+				}
+				return
+			}
+			if url.host == "certificates" {
+				if let certificate = Storage.shared.getCertificate(for: UserDefaults.standard.integer(forKey: "feather.selectedCert")) {
+					NotificationRouter.shared.certificate = certificate
+				}
+				return
+			}
 			if url.host == "udid" {
 				let value = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems?.first { $0.name == "value" }?.value ?? ""
 				AppleIDAccount.receiveDetectedUDID(value)
@@ -208,10 +240,14 @@ struct QuillApp: App {
 			if url.pathExtension == "ipa" || url.pathExtension == "tipa" {
 				if FileManager.default.isFileFromFileProvider(at: url) {
 					guard url.startAccessingSecurityScopedResource() else { return }
-					FR.handlePackageFile(url) { _ in }
-				} else {
-					FR.handlePackageFile(url) { _ in }
 				}
+				// "Sign with Quill": an IPA shared from Safari, Files or another app
+				// opens the signing screen as soon as it's imported.
+				let signAfter = UserDefaults.standard.object(forKey: "Quill.signAfterOpening") as? Bool ?? true
+				FR.handlePackageFile(url, onImported: { imported in
+					guard signAfter else { return }
+					NotificationRouter.shared.signApp = AnyApp(base: imported)
+				}) { _ in }
 
 				return
 			}

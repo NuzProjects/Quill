@@ -120,6 +120,7 @@
 			<string>thewonderofyou.Feather</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
+				<string>quill</string>
 				<string>feather</string>
 			</array>
 		</dict>

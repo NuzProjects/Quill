@@ -222,7 +222,7 @@ struct LibraryView: View {
 				LibraryInfoView(app: app.base)
 			}
 			.sheet(item: $_selectedInstallAppPresenting) { app in
-				InstallPreviewView(app: app.base, isSharing: app.archive)
+				InstallPreviewView(app: app.base, isSharing: app.archive, forceShareSheet: app.share)
 					.presentationDetents([.height(200)])
 					.presentationDragIndicator(.visible)
 			}
@@ -271,6 +271,11 @@ struct LibraryView: View {
 				guard let app else { return }
 				_selectedInfoAppPresenting = app
 				DispatchQueue.main.async { NotificationRouter.shared.openApp = nil }
+			}
+			.onReceive(NotificationRouter.shared.$importIPA) { importing in
+				guard importing else { return }
+				_isImportingPresenting = true
+				DispatchQueue.main.async { NotificationRouter.shared.importIPA = false }
 			}
 			.onReceive(NotificationRouter.shared.$signApp) { app in
 				guard let app else { return }

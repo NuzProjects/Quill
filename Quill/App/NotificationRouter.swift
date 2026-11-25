@@ -14,6 +14,8 @@ final class NotificationRouter: ObservableObject {
 	@Published var signApp: AnyApp?
 	/// An app picked from Spotlight; the Library shows its details and clears this.
 	@Published var openApp: AnyApp?
+	/// Set by the "Import IPA" control; the Library opens its file picker and clears this.
+	@Published var importIPA = false
 
 	private init() {}
 

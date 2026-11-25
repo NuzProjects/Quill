@@ -18,6 +18,10 @@ struct SigningView: View {
 	@State private var _tweakFindings: [URL: [TweakInspector.Finding]] = [:]
 
 	@State private var _selectedPhoto: PhotosPickerItem? = nil
+	@State private var _isIconLinkPresenting = false
+	@State private var _iconLink = ""
+	@State private var _isDownloadingIcon = false
+	@State private var _rememberLook = false
 	@State var appIcon: UIImage?
 
 	@FetchRequest(
@@ -145,6 +149,14 @@ struct SigningView: View {
 			{
 				_temporaryOptions.appName = newName
 			}
+
+			if CustomAppLook.hasSaved(for: app.identifier) {
+				_rememberLook = true
+				if appIcon == nil { appIcon = CustomAppLook.icon(for: app.identifier) }
+				if _temporaryOptions.appName == nil, let saved = CustomAppLook.name(for: app.identifier) {
+					_temporaryOptions.appName = saved
+				}
+			}
 			_applyReplacement()
 		}
 	}
@@ -158,13 +170,34 @@ extension SigningView {
 				Button(.localized("Select Alternative Icon"), systemImage: "app.dashed") { _isAltPickerPresenting = true }
 				Button(.localized("Choose from Files"), systemImage: "folder") { _isFilePickerPresenting = true }
 				Button(.localized("Choose from Photos"), systemImage: "photo") { _isImagePickerPresenting = true }
-			} label: {
-				if let icon = appIcon {
-					Image(uiImage: icon)
-						.appIconStyle()
-				} else {
-					FRAppIconView(app: app, size: 56)
+				Button(.localized("Paste Image"), systemImage: "doc.on.clipboard") { _pasteIcon() }
+				Button(.localized("From a Link"), systemImage: "link") {
+					_iconLink = ""
+					_isIconLinkPresenting = true
 				}
+				if appIcon != nil {
+					Button(.localized("Use Original Icon"), systemImage: "arrow.uturn.backward", role: .destructive) { appIcon = nil }
+				}
+			} label: {
+				ZStack {
+					if let icon = appIcon {
+						Image(uiImage: icon)
+							.appIconStyle()
+					} else {
+						FRAppIconView(app: app, size: 56)
+					}
+					if _isDownloadingIcon { ProgressView() }
+				}
+			}
+			.alert(.localized("Icon from a Link"), isPresented: $_isIconLinkPresenting) {
+				TextField("https://", text: $_iconLink)
+					.keyboardType(.URL)
+					.textInputAutocapitalization(.never)
+					.autocorrectionDisabled()
+				Button(.localized("Cancel"), role: .cancel) {}
+				Button(.localized("Download")) { _downloadIcon() }
+			} message: {
+				Text(.localized("Paste a link to a PNG or JPEG image."))
 			}
 
 			_infoCell(.localized("Name"), desc: _temporaryOptions.appName ?? app.name) {
@@ -196,6 +229,54 @@ extension SigningView {
 			} label: {
 				Text(.localized("App Library Folder"))
 			}
+			if app.identifier != nil {
+				Toggle(isOn: $_rememberLook) {
+					VStack(alignment: .leading, spacing: 2) {
+						Text(.localized("Remember Icon and Name"))
+						Text(.localized("Use them again next time you sign this app."))
+							.font(.caption)
+							.foregroundStyle(.secondary)
+					}
+				}
+			}
+		}
+	}
+
+	private func _pasteIcon() {
+		guard let image = UIPasteboard.general.image?.resizeToSquare() else {
+			UIAlertController.showAlertWithOk(
+				title: .localized("No Image Copied"),
+				message: .localized("Copy an image first, then try again.")
+			)
+			return
+		}
+		appIcon = image
+	}
+
+	private func _downloadIcon() {
+		let link = _iconLink
+		_isDownloadingIcon = true
+		Task { @MainActor in
+			defer { _isDownloadingIcon = false }
+			do {
+				appIcon = try await CustomAppLook.downloadIcon(from: link)
+			} catch {
+				UIAlertController.showAlertWithOk(
+					title: .localized("Couldn't Get That Image"),
+					message: .localized("Make sure the link goes straight to a PNG or JPEG image.")
+				)
+			}
+		}
+	}
+
+	/// Saves or clears the remembered icon and name, depending on the toggle.
+	private func _storeLook() {
+		guard let identifier = app.identifier else { return }
+		if _rememberLook {
+			let name = _temporaryOptions.appName.flatMap { $0 == app.name ? nil : $0 }
+			CustomAppLook.save(icon: appIcon, name: name, for: identifier)
+		} else if CustomAppLook.hasSaved(for: identifier) {
+			CustomAppLook.forget(identifier)
 		}
 	}
 
@@ -423,6 +504,7 @@ extension SigningView {
 		let generator = UIImpactFeedbackGenerator(style: .light)
 		generator.impactOccurred()
 		_isSigning = true
+		_storeLook()
 
 		let options = _temporaryOptions
 		FR.signPackageFile(

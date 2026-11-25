@@ -13,6 +13,16 @@ struct LibraryInfoView: View {
 						.frame(maxWidth: .infinity, alignment: .center)
 				}
 
+				Section {
+					NavigationLink {
+						AppInspectorView(app: app)
+					} label: {
+						Label(.localized("Inspect App"), systemImage: "magnifyingglass")
+					}
+				} footer: {
+					Text(.localized("See where the app's size comes from, what it needs to run and which permissions it can ask for."))
+				}
+
 				_infoSection(for: app)
 				_certSection(for: app)
 				_bundleSection(for: app)

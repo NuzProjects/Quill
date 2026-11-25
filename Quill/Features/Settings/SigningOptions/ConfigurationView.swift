@@ -8,6 +8,7 @@ struct ConfigurationView: View {
 	@State var randomString = ""
 	@AppStorage("Feather.compressionLevel") private var _compressionLevel: Int = ZipCompression.DefaultCompression.rawValue
 	@AppStorage("Feather.useShareSheetForArchiving") private var _useShareSheet: Bool = false
+	@AppStorage("Quill.signAfterOpening") private var _signAfterOpening: Bool = true
 
 	var body: some View {
 		NBList(.localized("Signing Options")) {
@@ -30,6 +31,12 @@ struct ConfigurationView: View {
 				Text(.localized("This allows you to set rules for automatically replacing the Bundle ID/Display Name when signing an app."))
 			}
 			SigningOptionsView(options: $_optionsManager.options)
+
+			NBSection(.localized("Opening IPAs")) {
+				Toggle(.localized("Sign Right After Opening"), systemImage: "signature", isOn: $_signAfterOpening)
+			} footer: {
+				Text(.localized("When you share an IPA to Quill from Safari, Files or another app, the signing screen opens as soon as it's imported."))
+			}
 
 			NBSection(.localized("Export")) {
 				Picker(.localized("Compression Level"), systemImage: "archivebox", selection: $_compressionLevel) {

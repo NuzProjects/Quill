@@ -283,6 +283,9 @@ extension LibraryCellView {
 				ReplacementCoordinator.shared.requestSigning(app) { selectedSigningAppPresenting = $0 }
 			}
 		}
+		Button(.localized("Share IPA"), systemImage: "paperplane") {
+			selectedInstallAppPresenting = AnyApp(base: app, archive: true, share: true)
+		}
 	}
 
 	@ViewBuilder
