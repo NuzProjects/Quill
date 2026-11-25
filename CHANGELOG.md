@@ -16,6 +16,7 @@ Versions 1.3.5 and earlier were released under the Feather name.
 - iCloud Sync for certificates: your certificates are saved in iCloud Keychain, end-to-end encrypted, and show up in Quill on your other devices. Turn it on in Settings > iCloud Sync
 - Custom app icons: paste a copied image, or download one from a link
 - Remember Icon and Name: Quill uses the same custom icon and name next time you sign that app
+- Quill now opens quill:// links. Older feather:// links still work
 
 ## [1.4.0 Beta 2](https://github.com/NuzProjects/Quill/releases/tag/v1.4.0-beta2-build179) (pre-release) - 2026-11-24
 

@@ -3,7 +3,7 @@ import WidgetKit
 import AppIntents
 
 // Control Center, Lock Screen and Action button controls (iOS 18 and later).
-// Each control opens Quill at the right place through its feather:// link.
+// Each control opens Quill at the right place through its quill:// link.
 
 @available(iOS 18.0, *)
 struct OpenQuillLinkIntent: AppIntent {
@@ -26,7 +26,7 @@ struct OpenQuillLinkIntent: AppIntent {
 struct ImportIPAControl: ControlWidget {
 	var body: some ControlWidgetConfiguration {
 		StaticControlConfiguration(kind: "QuillImportIPAControl") {
-			ControlWidgetButton(action: OpenQuillLinkIntent("feather://import")) {
+			ControlWidgetButton(action: OpenQuillLinkIntent("quill://import")) {
 				Label("Import IPA", systemImage: "square.and.arrow.down")
 			}
 		}
@@ -39,7 +39,7 @@ struct ImportIPAControl: ControlWidget {
 struct PasteLinkControl: ControlWidget {
 	var body: some ControlWidgetConfiguration {
 		StaticControlConfiguration(kind: "QuillPasteLinkControl") {
-			ControlWidgetButton(action: OpenQuillLinkIntent("feather://paste")) {
+			ControlWidgetButton(action: OpenQuillLinkIntent("quill://paste")) {
 				Label("Download Copied Link", systemImage: "link.badge.plus")
 			}
 		}
@@ -52,7 +52,7 @@ struct PasteLinkControl: ControlWidget {
 struct SignLatestControl: ControlWidget {
 	var body: some ControlWidgetConfiguration {
 		StaticControlConfiguration(kind: "QuillSignLatestControl") {
-			ControlWidgetButton(action: OpenQuillLinkIntent("feather://sign-latest")) {
+			ControlWidgetButton(action: OpenQuillLinkIntent("quill://sign-latest")) {
 				Label("Sign Latest IPA", systemImage: "signature")
 			}
 		}
@@ -86,7 +86,7 @@ struct CertificateStatusProvider: ControlValueProvider {
 struct CertificateStatusControl: ControlWidget {
 	var body: some ControlWidgetConfiguration {
 		StaticControlConfiguration(kind: "QuillCertificateControl", provider: CertificateStatusProvider()) { value in
-			ControlWidgetButton(action: OpenQuillLinkIntent("feather://certificates")) {
+			ControlWidgetButton(action: OpenQuillLinkIntent("quill://certificates")) {
 				Label(value.title, systemImage: value.systemImage)
 			}
 		}

@@ -105,7 +105,8 @@ struct QuillApp: App {
 	}
 
 	private func _handleURL(_ url: URL) {
-		if url.scheme == "feather" {
+		// quill:// is the main link. feather:// keeps working for links made before the rename.
+		if let scheme = url.scheme?.lowercased(), scheme == "quill" || scheme == "feather" {
 			if url.host == "import-certificate" {
 				guard
 					let components = URLComponents(url: url, resolvingAgainstBaseURL: false),

@@ -255,7 +255,7 @@ enum FR {
 		}
 
 		let scheme = template.split(separator: ":", maxSplits: 1).first.map { $0.lowercased() } ?? ""
-		let blockedSchemes: Set<String> = ["http", "https", "javascript", "data", "file", "ftp", "ws", "wss", "about", "blob", "itms-services", "feather", "mailto", "sms", "tel"]
+		let blockedSchemes: Set<String> = ["http", "https", "javascript", "data", "file", "ftp", "ws", "wss", "about", "blob", "itms-services", "feather", "quill", "mailto", "sms", "tel"]
 		guard
 			!scheme.isEmpty,
 			scheme.allSatisfy({ $0.isLetter || $0.isNumber || $0 == "+" || $0 == "-" || $0 == "." }),
