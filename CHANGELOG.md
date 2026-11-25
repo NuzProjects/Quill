@@ -4,7 +4,7 @@ All notable changes to Quill. Each version links to its release, where you can d
 
 Versions 1.3.5 and earlier were released under the Feather name.
 
-## Unreleased
+## 1.4.0 Beta 3 (pre-release) - 2026-11-25
 
 ### New
 - Inspect App: see what's inside an app before you sign it, including its permissions, frameworks, tweaks, extensions and size

@@ -1,19 +1,13 @@
-## Update 1.4.0 Beta 2
+## Update 1.4.0 Beta 3
 
 **New:**
-* iPad: a sidebar that stays open, with Sources, Library and Settings, plus every GitHub repo and source you've added. Swipe to delete a source, or add one right from the sidebar
-* iPad: Library and Sources now use the same clean rows as iPhone
-* Library: switch between List and Grid from the sort menu
-* Quill warns before signing or installing if this device isn't in your certificate's provisioning profile, and can check this device for you
-* Copied an .ipa link? When you open Quill, a Paste button offers to import it. Turn this off under Settings > Misc
-
-**Changes:**
-* Days left on signed apps and certificates now roll up like an odometer
-* What's New in Settings > Updates now looks like the update pop-up, with a heading and icon for each change
-* The sidebar's Quill title is now left-aligned
-* A cleaner icon for the Library sort menu
-
-**Fixes:**
-* Copying any web link no longer makes iOS ask to allow pasting when you open Quill
-* iPad: switching in the sidebar keeps your place in each tab instead of starting over
-* iPad: screens opened from Library and Sources use the full iPad layout again
+* Inspect App: see what's inside an app before you sign it, including its permissions, frameworks, tweaks, extensions and size
+* Share IPA: send a signed or unsigned app to someone from the Library's menu
+* Sign with Quill: open an .ipa from Files, Safari or any app's share sheet and Quill imports it. Turn on Sign Right After Opening in Settings to go straight to signing
+* Control Center controls (iOS 18): Import IPA, Download Copied Link, Sign Latest IPA, and a certificate control that shows how many days you have left. You can also put these on the Lock Screen or the Action button
+* Check Sources: find out which of your sources are broken, slow, or haven't been updated in a while, and remove the broken ones with a swipe
+* Make a Source: turn apps in your Library into a source file you can host anywhere and add to Quill, AltStore or SideStore
+* iCloud Sync for certificates: your certificates are saved in iCloud Keychain, end-to-end encrypted, and show up in Quill on your other devices. Turn it on in Settings > iCloud Sync
+* Custom app icons: paste a copied image, or download one from a link
+* Remember Icon and Name: Quill uses the same custom icon and name next time you sign that app
+* Quill now opens quill:// links. Older feather:// links still work
