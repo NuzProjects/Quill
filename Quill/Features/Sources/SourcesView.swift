@@ -9,6 +9,8 @@ struct SourcesView: View {
 	@State private var _isAddingPresenting = false
 	@State private var _addingSourceLoading = false
 	@State private var _searchText = ""
+	@State private var _isCheckingPresenting = false
+	@State private var _isCreatorPresenting = false
 
 	private var _filteredSources: [AltSource] {
 		_sources.filter {
@@ -133,6 +135,16 @@ struct SourcesView: View {
 				}
 			}
 			.toolbar {
+				ToolbarItem(placement: .topBarLeading) {
+					Menu {
+						Button(.localized("Check Sources"), systemImage: "stethoscope") { _isCheckingPresenting = true }
+							.disabled(_sources.isEmpty)
+						Button(.localized("Make a Source"), systemImage: "hammer") { _isCreatorPresenting = true }
+					} label: {
+						Image(systemName: "ellipsis.circle")
+					}
+					.accessibilityLabel(Text(.localized("Source Tools")))
+				}
 				NBToolbarButton(
 					systemImage: "plus",
 					style: .icon,
@@ -149,6 +161,8 @@ struct SourcesView: View {
 			.sheet(isPresented: $_isAddingPresenting) {
 				SourcesAddView()
 			}
+			.navigationDestination(isPresented: $_isCheckingPresenting) { SourceHealthView() }
+			.navigationDestination(isPresented: $_isCreatorPresenting) { SourceCreatorView() }
 		}
 		.task(id: Array(_sources)) {
 			await viewModel.fetchSources(_sources)

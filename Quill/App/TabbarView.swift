@@ -133,6 +133,14 @@ struct TabbarView: View {
 			TabTransition.crossfade()
 			selected = .library
 		}
+		.onChange(of: router.importIPA) { importing in
+			guard importing else { return }
+			_sidebarExtra = nil
+			if navigator.tabs.contains(.library), selected != .library {
+				TabTransition.crossfade()
+				selected = .library
+			}
+		}
 		.onChange(of: router.signApp?.id) { id in
 			if id != nil { _sidebarExtra = nil }
 			guard id != nil, navigator.tabs.contains(.library), selected != .library else { return }

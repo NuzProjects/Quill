@@ -31,6 +31,7 @@ extension Storage {
 	}
 
 	func deleteCertificate(for cert: CertificatePair) {
+		CertificateSync.forget(cert)
 		if let uuid = cert.uuid {
 			AppleIDAccount.forget(uuid: uuid)
 		}

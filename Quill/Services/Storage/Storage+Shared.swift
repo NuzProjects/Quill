@@ -40,6 +40,9 @@ extension Storage {
 struct AnyApp: Identifiable {
 	let base: AppInfoPresentable
 	var archive: Bool = false
+	/// With `archive`, always show the share sheet (AirDrop, Messages, Save to Files)
+	/// instead of following the "Show Sheet when Exporting" setting.
+	var share: Bool = false
 	var replacementUUID: String? = nil
 	var preferredIdentifier: String? = nil
 

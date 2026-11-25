@@ -7,5 +7,11 @@ struct QuillWidgetsBundle: WidgetBundle {
 		CertificateWidget()
 		LibraryWidget()
 		QuillProgressActivityWidget()
+		if #available(iOS 18.0, *) {
+			ImportIPAControl()
+			PasteLinkControl()
+			SignLatestControl()
+			CertificateStatusControl()
+		}
 	}
 }

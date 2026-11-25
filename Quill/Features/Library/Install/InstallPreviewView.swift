@@ -20,13 +20,15 @@ struct InstallPreviewView: View {
 	@StateObject var installer: ServerInstaller
 
 	@State var isSharing: Bool
+	let forceShareSheet: Bool
 	let inBackground: Bool
 	let onClose: (() -> Void)?
 	let onProgress: ((String, Double) -> Void)?
 
-	init(app: AppInfoPresentable, isSharing: Bool = false, inBackground: Bool = false, onClose: (() -> Void)? = nil, onProgress: ((String, Double) -> Void)? = nil) {
+	init(app: AppInfoPresentable, isSharing: Bool = false, forceShareSheet: Bool = false, inBackground: Bool = false, onClose: (() -> Void)? = nil, onProgress: ((String, Double) -> Void)? = nil) {
 		self.app = app
 		self.isSharing = isSharing
+		self.forceShareSheet = forceShareSheet
 		self.inBackground = inBackground
 		self.onClose = onClose
 		self.onProgress = onProgress
@@ -271,9 +273,10 @@ struct InstallPreviewView: View {
 						try await handler.install(at: packageUrl, suspend: app.identifier == Bundle.main.bundleIdentifier!)
 					}
 				} else {
-					let package = try await handler.moveToArchive(packageUrl, shouldOpen: !_useShareSheet)
+					let showSheet = await _useShareSheet || forceShareSheet
+					let package = try await handler.moveToArchive(packageUrl, shouldOpen: !showSheet)
 
-					if await !_useShareSheet {
+					if !showSheet {
 						await MainActor.run {
 							dismiss()
 						}
